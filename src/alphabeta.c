@@ -147,8 +147,11 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, PositionList 
             time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
             if (time_taken > max_time)
             {
+                // si on n'a pas fini d'évaluer nos coups, on prend le mieux qu'on a trouvé
                 if (depth == 0)
-                    fprintf(stderr, "time exceeded the limit, time taken: %f\n", time_taken);
+                    {
+                        fprintf(stderr, "time exceeded the limit, time taken: %f\n", time_taken);
+                    }
                 break;
             }
             Move new_move = move_list->moves[i];
@@ -185,6 +188,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, PositionList 
             time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
             if (time_taken > max_time)
             {
+                // si on n'a pas fini d'évaler les coups de l'ennemi, on considère qu'il est dans une position gagnante
                 result.score = -MAX_SCORE;
                 break;
             }
@@ -233,14 +237,14 @@ Move iterative_deepening(PositionList *board_history, char color, int max_depth,
     MoveScore new_move_score;
     clock_t start_iter, end_iter;
     double cpu_time_used;
-    int nodes;
+    int nodes = 0;
+    int score;
     double nps;
     for (int i = 1; i <= max_depth; i++)
     {
         nodes = 0;
         start_iter = clock();
         new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, board_history, color, empty_move(), 1, 0, &nodes, glob_start, max_time, move);
-        int score = new_move_score.score;
         end_iter = clock();
         cpu_time_used = ((double)(end_iter - start_iter)) / CLOCKS_PER_SEC;
         nps = nodes / cpu_time_used;
@@ -248,13 +252,19 @@ Move iterative_deepening(PositionList *board_history, char color, int max_depth,
         {
             move = new_move_score.move;
         }
-        fprintf(stderr, "depth: %d, move: %c%c -> %c%c, score: %d, time taken: %f, nodes checked: %d, nps: %f\n", i, 'a' + move.init_co.y, '1' + move.init_co.x, 'a' + move.dest_co.y, '1' + move.dest_co.x, score, cpu_time_used, nodes, nps);
+        double total_time = ((double)(clock() - glob_start)) / CLOCKS_PER_SEC;
+        fprintf(stderr, "depth: %d, move: %c%c -> %c%c, score: %d, time taken: %f, nodes checked: %d, nps: %f\n", i, 'a' + move.init_co.y, '1' + move.init_co.x, 'a' + move.dest_co.y, '1' + move.dest_co.x, new_move_score.score, cpu_time_used, nodes, nps);
+        if (total_time > max_time && new_move_score.score < -1000)
+            fprintf(stderr, "no move was completed on last iteration, taking previous score as reference\n");
+        else
+            score = new_move_score.score;
         if (abs(score) >= MAX_SCORE - 50)
         {
             fprintf(stderr, "a mate was found\n");
-            break;
+            if(score > 0){
+                break;
+            }
         }
-        double total_time = ((double)(clock() - glob_start)) / CLOCKS_PER_SEC;
         if (score < -1000 && (total_time > max_time || i >= max_depth))
         {
             fprintf(stderr, "surrendering\n");

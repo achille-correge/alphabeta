@@ -15,7 +15,7 @@ OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Define the output directory and executable name
 BUILD_DIR = builds
-EXECUTABLE = $(BUILD_DIR)/alphabeta_2.0
+EXECUTABLE = $(BUILD_DIR)/alphabeta_2.0.1
 
 # Define the default target
 all: $(EXECUTABLE)
