@@ -108,6 +108,24 @@ int parse_depth(char *token)
     return atoi(token);
 }
 
+float time_for_move(float time_left, float increment, int moves_to_go)
+{
+    if (time_left == -1)
+    {
+        return 3600; // 1 hour
+    }
+    float time = time_left / moves_to_go;
+    if (increment > 0)
+    {
+        time += increment;
+    }
+    if (time < 0.01)
+        time = 0.005;
+    else
+        time = time - 0.005;
+    return time;
+}
+
 void parse_go(char *token, PositionList *board_history)
 {
     int depth = 50;
@@ -150,14 +168,10 @@ void parse_go(char *token, PositionList *board_history)
             fprintf(stderr, "Error: unknown go command\n");
         }
     }
-    (void)winc, (void)binc;
-    double time = board_history->board_s->player == WHITE ? wtime : btime;
-    if (time < 0.01)
-        time = 0.005;
-    else if (time == -1)
-        time = 3600000;
-    else
-        time = time - 0.005;
+    double time_left = board_history->board_s->player == WHITE ? wtime : btime;
+    double increment = board_history->board_s->player == WHITE ? winc : binc;
+    int moves_to_go = 40; // default value
+    double time = time_for_move(time_left, increment, moves_to_go);
     char color = board_history->board_s->player == WHITE ? 'w' : 'b';
     Move best_move = iterative_deepening(board_history, color, depth, time);
     print_answer(best_move);
