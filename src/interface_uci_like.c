@@ -33,6 +33,10 @@ PositionList *parse_moves(char *token, PositionList *board_history)
     {
         *new_board_s = *board_history->board_s;
         token = strtok(NULL, " ");
+        if (token == NULL)
+        {
+            break;
+        }
         last_char = token[strlen(token) - 1];
         move.init_co.x = token[1] - '1';
         move.init_co.y = token[0] - 'a';
@@ -41,6 +45,11 @@ PositionList *parse_moves(char *token, PositionList *board_history)
         if (token[4] != '\0' && token[4] != '\n')
         {
             move.promotion = token[4];
+            // Convert lowercase promotion to uppercase (UCI uses lowercase)
+            if (move.promotion >= 'a' && move.promotion <= 'z')
+            {
+                move.promotion = move.promotion - 'a' + 'A';
+            }
         }
         else
         {
