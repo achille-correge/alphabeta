@@ -11,6 +11,8 @@ extern int MAX_SCORE;
 const int PIECES_VALUES_MG[6] = {82, 337, 365, 477, 1025, 0};
 const int PIECES_VALUES_EG[6] = {94, 281, 297, 512, 936, 0};
 
+const int passed_pawn_bonus[8] = {0, 15, 25, 35, 50, 80, 120, 0};
+
 const int KING_TABLE_MG[8][8] = {
     {-65,  23,  16, -15, -56, -34,   2,  13},
     { 29,  -1, -20,  -7,  -8,  -4, -38, -29},
@@ -213,7 +215,7 @@ const Bitboard under_over_ranks[2][8] = {
     {0xFFFFFFFFFFFFFF00, 0xFFFFFFFFFFFF0000, 0xFFFFFFFFFF000000, 0xFFFFFFFF00000000, 0xFFFFFF0000000000, 0xFFFF000000000000, 0xFF00000000000000, 0x0000000000000000}};
 
 // evaluate pawn structure
-int pawn_structure_eval(BoardState *board_s, int x, int y, char color)
+int one_pawn_structure_eval(BoardState *board_s, int x, int y, char color)
 {
     int score = 0;
     Bitboard pawns = color == 'w' ? board_s->all_pieces_bb[WHITE][PAWN] : board_s->all_pieces_bb[BLACK][PAWN];
@@ -223,8 +225,9 @@ int pawn_structure_eval(BoardState *board_s, int x, int y, char color)
     Bitboard pwn_file = FILE_H << (7-y);
     Bitboard right_file = FILE_H << (7-y-1);
     Bitboard pwn_row = RANK_1 << x*8;
-    int start_row = color == 'w' ? 6 : 1;
-    bool semi_open_file = (pwn_file & opponent_pawns) == 0;
+    // Bitboard pwn = pwn_file & pwn_row;
+    // int start_row = color == 'w' ? 6 : 1;
+    // bool semi_open_file = (pwn_file & opponent_pawns) == 0;
 
     // ISOLATED
     if ((pawns & left_file) == 0 && (pawns & right_file) == 0)
@@ -233,28 +236,60 @@ int pawn_structure_eval(BoardState *board_s, int x, int y, char color)
     }
 
     // BACKWARD
-    if ((pawns & in_front_mask & left_file & right_file) != 0 && x != start_row)
-    {
-        if (semi_open_file)
-        {
-            score -= 10;
-        }
-    }
+    // if ((pawns & in_front_mask & left_file & right_file) != 0 && x != start_row)
+    // {
+    //     if (semi_open_file)
+    //     {
+    //         score -= 10;
+    //     }
+    // }
 
     // DOUBLED
     if ((pwn_file & pawns & ~pwn_row) != 0)
     {
-        score -= 20;
+        score -= 5;
     }
 
     // PASSED
-    if ((opponent_pawns & left_file & right_file & in_front_mask) != 0)
+    if ((opponent_pawns & left_file & right_file & in_front_mask) == 0)
     {
-        score += 25;
-        score += (color == 'w' ? x : 7 - x)*5;
+        int advancement = color == 'w' ? x : (7 - x);
+        score += passed_pawn_bonus[advancement];
     }
-    return score/10;
+
+    // PROTECTED or PROTECTS
+    if ((pawns & (left_file | right_file) & (pwn_row << 8 | pwn_row >> 8)) != 0)
+    {
+        score += 10;
+    }
+    return score;
 }
+
+// Loop over all the pawns and evaluate their structure
+int pawn_structure_eval(BoardState *board_s)
+{
+    int score = 0;
+    Bitboard white_pawns = board_s->all_pieces_bb[WHITE][PAWN];
+    Bitboard black_pawns = board_s->all_pieces_bb[BLACK][PAWN];
+    while (white_pawns)
+    {
+        int square = __builtin_ctzll(white_pawns);
+        int x = square / 8;
+        int y = square % 8;
+        score += one_pawn_structure_eval(board_s, x, y, 'w');
+        white_pawns &= white_pawns - 1;
+    }
+    while (black_pawns)
+    {
+        int square = __builtin_ctzll(black_pawns);
+        int x = square / 8;
+        int y = square % 8;
+        score -= one_pawn_structure_eval(board_s, x, y, 'b');
+        black_pawns &= black_pawns - 1;
+    }
+    return score;
+}
+
 
 bool check_for_mates(BoardState *board_s, char color, int *result)
 {
@@ -347,5 +382,7 @@ int pieces_eval(PositionList *board_history)
 int eval(PositionList *board_history)
 {
     int score = pieces_eval(board_history);
+    score += pawn_structure_eval(board_history->board_s);
+    score += castle_eval(board_history->board_s);
     return score;
 }
