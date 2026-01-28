@@ -379,6 +379,32 @@ int pieces_eval(PositionList *board_history)
     return (pieces_eval_mg * mgphase + pieces_eval_eg * egphase) / 24;
 }
 
+int castle_eval(BoardState *board_s)
+{
+    // grère l'éval du castling (avoir l'option de castle est toujours un avantage
+    // mais surtout si on l'a pas fait, il ne faut pas bouger le roi au centre)
+    // Stockfish faisait pas comme ça bien sûr, y a moyen de rework sur la sécurité du roi
+    // Auquel cas, plus faire appel aux phases, lissage etc serait de bon ton
+    int score = 0;
+    if (board_s->white_kingside_castlable || board_s->white_queenside_castlable)
+    {
+        score += 10;
+    }
+    else if ((board_s->all_pieces_bb[WHITE][KING] & 0x0000000000003838) && board_s->phase > 13)
+    {
+        score -= 50;
+    }
+    if (board_s->black_kingside_castlable || board_s->black_queenside_castlable)
+    {
+        score -= 10;
+    }
+    else if ((board_s->all_pieces_bb[BLACK][KING] & 0x3838000000000000) && board_s->phase > 13)
+    {
+        score += 50;
+    }
+    return score;
+}
+
 int eval(PositionList *board_history)
 {
     int score = pieces_eval(board_history);

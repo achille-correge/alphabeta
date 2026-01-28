@@ -597,6 +597,18 @@ BoardState *init_board()
     return board_s;
 }
 
+int compute_phase(BoardState *board_s)
+{
+    int phase = 0;
+    for (int piece_type = PAWN; piece_type <= QUEEN; piece_type++)
+    {
+        int white_count = __builtin_popcountll(board_s->all_pieces_bb[WHITE][piece_type]);
+        int black_count = __builtin_popcountll(board_s->all_pieces_bb[BLACK][piece_type]);
+        phase += PIECES_PHASE_VALUES[piece_type] * (white_count + black_count);
+    }
+    return phase;
+}
+
 BoardState *FEN_to_board(char *FEN)
 {
     BoardState *board_s = init_board();
@@ -701,6 +713,7 @@ BoardState *FEN_to_board(char *FEN)
     }
     i = i + 2;
     board_s->fifty_move_rule = FEN[i] - '0';
+    board_s->phase = compute_phase(board_s);
     return board_s;
 }
 

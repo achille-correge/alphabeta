@@ -58,7 +58,7 @@ typedef struct
     int fifty_move_rule;
     Color player;
 
-    // redondance
+    // redondance ou pour calculer rapidement ou pour l'éval
     Bitboard color_bb[2];
     Bitboard all_pieces_bb[2][6];
     int phase;
