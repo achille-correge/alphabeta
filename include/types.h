@@ -61,6 +61,7 @@ typedef struct
     // redondance
     Bitboard color_bb[2];
     Bitboard all_pieces_bb[2][6];
+    int phase;
 } BoardState;
 
 typedef struct position_list

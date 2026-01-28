@@ -7,6 +7,7 @@
 #include "chess_logic.h"
 #include "interface_uci_like.h"
 #include "debug_functions.h"
+#include "eval.h"
 #define MAX_MSG_LENGTH 32000
 
 void print_board(BoardState *board_s)
@@ -171,6 +172,7 @@ void answer_uci()
 
 int main()
 {
+    init_eval_tables();
     // test_self_engine(1.0, 1.0);
     // test_uci_solo();
     answer_uci();

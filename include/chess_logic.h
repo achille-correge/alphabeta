@@ -17,6 +17,7 @@ bool is_empty_coords(Coords coords);
 bool is_empty_move(Move move);
 int coords_to_square(Coords co);
 Coords square_to_coords(int square);
+PieceType char_to_piece_type(char c);
 PositionList *empty_list();
 void free_position_list(PositionList *pos_l);
 int pos_list_length(PositionList *pos_l);

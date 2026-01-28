@@ -265,11 +265,11 @@ Move iterative_deepening(PositionList *board_history, char color, int max_depth,
                 break;
             }
         }
-        if (score < -1000 && (total_time > max_time || i >= max_depth))
-        {
-            fprintf(stderr, "surrendering\n");
-            return empty_move();
-        }
+        // if (score < -1000 && (total_time > max_time || i >= max_depth))
+        // {
+        //     fprintf(stderr, "surrendering\n");
+        //     return empty_move();
+        // }
         if (total_time > max_time)
         {
             break;

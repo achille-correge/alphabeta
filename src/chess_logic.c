@@ -8,6 +8,8 @@
 #include "bitboards_moves.h"
 #include "debug_functions.h"
 
+const int PIECES_PHASE_VALUES[6] = {0, 1, 1, 2, 4, 0};
+
 Piece empty_piece()
 {
     Piece piece;
@@ -261,6 +263,7 @@ BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest
         board_s->board[new_coords.x][new_coords.y].name = sel_move.promotion;
         board_s->all_pieces_bb[color][char_to_piece_type(sel_move.promotion)] |= 1ULL << coords_to_square(new_coords);
         board_s->all_pieces_bb[color][PAWN] &= ~(1ULL << coords_to_square(new_coords));
+        board_s->phase += PIECES_PHASE_VALUES[char_to_piece_type(sel_move.promotion)];
     }
     if (move_piece.color == 'w' && new_coords.x - init_coords.x == 2)
     {
@@ -373,6 +376,7 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
     {
         board_s->color_bb[enemy_color] ^= 1ULL << coords_to_square(new_coords);
         board_s->all_pieces_bb[enemy_color][char_to_piece_type(dest_piece.name)] ^= 1ULL << coords_to_square(new_coords);
+        board_s->phase -= PIECES_PHASE_VALUES[char_to_piece_type(dest_piece.name)];
     }
     // fifty move rule
     if (dest_piece.name == ' ' && move_piece.name != 'P')
@@ -587,6 +591,8 @@ BoardState *init_board()
     board_s->all_pieces_bb[BLACK][QUEEN] = init_black_queens();
     board_s->all_pieces_bb[WHITE][KING] = init_white_kings();
     board_s->all_pieces_bb[BLACK][KING] = init_black_kings();
+
+    board_s->phase = 24; // starting phase (all pieces except kings)
 
     return board_s;
 }
