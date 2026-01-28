@@ -101,10 +101,14 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, PositionList 
     *nodes = *nodes + 1;
     MoveScore result;
     result.move = tested_move;
-    if (depth == max_depth)
+    if (depth >= max_depth)
     {
-        result.score = alpha_beta_score(board_history, color, is_max);
-        return result;
+        // depth extension if in check
+        if (!(is_king_in_check(board_history->board_s) && depth-max_depth < 8))
+        {
+            result.score = alpha_beta_score(board_history, color, is_max);
+            return result;
+        }
     }
     // MoveList *move_list2 = possible_moves(board_history->board_s, color);
     MoveList *move_list = possible_moves_bb(board_history->board_s);
