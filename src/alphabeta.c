@@ -103,7 +103,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, PositionList 
     result.move = tested_move;
     if (depth >= max_depth)
     {
-        // depth extension if in check
+        // depth extension if in check (+14.0 +/- 3.4 elo)
         if (!(is_king_in_check(board_history->board_s) && depth-max_depth < 8))
         {
             result.score = alpha_beta_score(board_history, color, is_max);

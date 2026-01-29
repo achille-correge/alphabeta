@@ -15,7 +15,7 @@ OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Define the output directory and executable name
 BUILD_DIR = builds
-EXECUTABLE = $(BUILD_DIR)/felabot_2.0.4_depth_extension
+EXECUTABLE = $(BUILD_DIR)/felabot_2.0.4
 
 # Define the default target
 all: $(EXECUTABLE)

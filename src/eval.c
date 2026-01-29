@@ -408,7 +408,7 @@ int castle_eval(BoardState *board_s)
 int eval(PositionList *board_history)
 {
     int score = pieces_eval(board_history);
-    score += pawn_structure_eval(board_history->board_s);
-    score += castle_eval(board_history->board_s);
+    // score += pawn_structure_eval(board_history->board_s);    // -3.8 +/- 4.7 elo
+    // score += castle_eval(board_history->board_s);            // -6.7 +/- 5.2 elo
     return score;
 }
