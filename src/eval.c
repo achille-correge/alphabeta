@@ -376,6 +376,7 @@ int pieces_eval(PositionList *board_history)
     if (mgphase > 24)
         mgphase = 24;
     int egphase = 24 - mgphase;
+    // fprintf(stderr, "Pieces eval mg: %d, eg: %d, phase: %d\n", pieces_eval_mg, pieces_eval_eg, phase);
     return (pieces_eval_mg * mgphase + pieces_eval_eg * egphase) / 24;
 }
 
@@ -408,6 +409,7 @@ int castle_eval(BoardState *board_s)
 int eval(PositionList *board_history)
 {
     int score = pieces_eval(board_history);
+    // fprintf(stderr, "Pieces eval: %d\n", score);
     // score += pawn_structure_eval(board_history->board_s);    // -3.8 +/- 4.7 elo
     // score += castle_eval(board_history->board_s);            // -6.7 +/- 5.2 elo
     return score;

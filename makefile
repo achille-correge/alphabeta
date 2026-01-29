@@ -5,7 +5,7 @@ CC = gcc
 CFLAGS = -Wall -Iinclude
 
 # Define the source files
-SRCS = $(filter-out src/make_magic.c, $(wildcard src/*.c))
+SRCS = $(filter-out src/make_magic.c src/make_zobrist.c, $(wildcard src/*.c))
 
 # Define the object files directory
 OBJ_DIR = builds/object_files
@@ -15,7 +15,7 @@ OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Define the output directory and executable name
 BUILD_DIR = builds
-EXECUTABLE = $(BUILD_DIR)/felabot_2.0.4
+EXECUTABLE = $(BUILD_DIR)/felabot_2.0.5_tt
 
 # Define the default target
 all: $(EXECUTABLE)

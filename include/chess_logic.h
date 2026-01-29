@@ -27,6 +27,7 @@ Piece get_piece(Piece board[8][8], Coords coords);
 // nul check
 bool are_same_pos(BoardState *board_s1, BoardState *board_s2);
 bool threefold_repetition(BoardState *board_s, PositionList *pos_l, int number_of_repetitions);
+bool threefold_hash(uint64_t hash, PositionList *pos_l, int number_of_repetitions);
 bool insufficient_material(BoardState *board_s);
 
 // check functions

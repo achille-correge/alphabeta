@@ -6,6 +6,6 @@
 #include "eval.h"
 
 MoveList *possible_moves(BoardState *board_s, char color);
-Move iterative_deepening(PositionList *board_history, char color, int max_depth, double max_time);
+Move iterative_deepening(TranspoTable *tt, PositionList *board_history, char color, int max_depth, double max_time);
 
 #endif

@@ -135,7 +135,7 @@ float time_for_move(float time_left, float increment, int moves_to_go)
     return time;
 }
 
-void parse_go(char *token, PositionList *board_history)
+void parse_go(char *token, TranspoTable *tt, PositionList *board_history)
 {
     int depth = 50;
     double wtime = 0, btime = 0;
@@ -182,12 +182,12 @@ void parse_go(char *token, PositionList *board_history)
     int moves_to_go = 40; // default value
     double time = time_for_move(time_left, increment, moves_to_go);
     char color = board_history->board_s->player == WHITE ? 'w' : 'b';
-    Move best_move = iterative_deepening(board_history, color, depth, time);
+    Move best_move = iterative_deepening(tt, board_history, color, depth, time);
     print_answer(best_move);
     print_board_debug(move_piece(board_history->board_s, best_move));
 }
 
-void handle_uci_command(char *command, PositionList *board_history)
+void handle_uci_command(char *command, TranspoTable *tt, PositionList *board_history)
 {
     if (strlen(command) == 0)
     {
@@ -197,7 +197,7 @@ void handle_uci_command(char *command, PositionList *board_history)
     char *token = strtok(command, " ");
     if (strcmp(token, "uci\n") == 0)
     {
-        printf("id name felabot 2.0.4t\n");
+        printf("id name felabot 2.0.5_tt\n");
         fflush(stdout);
         printf("id author Achille Correge\n");
         fflush(stdout);
@@ -222,7 +222,7 @@ void handle_uci_command(char *command, PositionList *board_history)
     else if (strncmp(token, "go", 2) == 0)
     {
         print_board_debug(board_history->board_s);
-        parse_go(token, board_history);
+        parse_go(token, tt, board_history);
     }
     else if (strcmp(token, "quit\n") == 0)
     {
@@ -230,7 +230,8 @@ void handle_uci_command(char *command, PositionList *board_history)
     }
     else if (strcmp(token, "ucinewgame\n") == 0)
     {
-        // do nothing
+        // for the moment, do nothing
+        // initialize_transposition_table(tt, 1 << 20);
     }
     else
     {

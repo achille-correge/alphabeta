@@ -61,6 +61,7 @@ typedef struct
     // redondance ou pour calculer rapidement ou pour l'éval
     Bitboard color_bb[2];
     Bitboard all_pieces_bb[2][6];
+    uint64_t hash;
     int phase;
 } BoardState;
 
@@ -75,5 +76,27 @@ typedef struct
     Move moves[MAX_MOVES];
     int size;
 } MoveList;
+
+typedef enum
+{
+    EXACT,
+    LOWERBOUND,
+    UPPERBOUND
+} Flag;
+
+typedef struct
+{
+    uint64_t hash;
+    Score score;
+    int depth;
+    Move best_move;
+    Flag flag;
+} TranspoTableEntry;
+
+typedef struct
+{
+    size_t size;
+    TranspoTableEntry *entries;
+} TranspoTable;
 
 #endif

@@ -1,0 +1,51 @@
+MOVE_ORDERING (v2.2)
+
+
+CLEAN DU CODE (v2.1) :
+    - Changer partout les types de couleurs et pièce from char to leur enum correspondante
+    - Stocker les variables de la recherche dans du contexte pour tout factoriser exemples :
+        typedef struct {
+            PositionList *board_history;
+            Move prio_move;
+            int is_max; // On peut souvent déduire ça de la profondeur ou de la couleur
+            char color;
+        } SearchStack;
+        typedef struct {
+            TranspositionTable *tt;
+            clock_t start_clk;
+            double max_time;
+            int *nodes;
+            int max_depth;
+        } SearchContext;
+    - Pour de la perf : faire gaffe au cache. (Au pire demander à Gemini pour optimiser)
+        -> stocker les enums dans des uint8_t par exemple
+        -> stocker les moves dans des uint16_t (big taffe mais cool)
+    - Peut être? Ne pas se trimbaler l'historique partout et utiliser uniquement une table d'historique
+    - Improve l'UCI avec des options supplémentaires
+
+
+TranspositionTable (v2.0.5)
+    - Faire une table de transposition qui marche et fait pas perdre trop d'elo
+    - Si ça marche pas, ajouter une table d'historique
+
+
+// Historique des changements
+
+v2.0.5 TranspositionTable
+
+v2.0.4 Depth extension
+    - Ajout d'une depth extention jusqu'à +8 en cas d'échec
+        -> +14.0 +/- 3.4 elo
+    - Utilisation de CuteChess pour évaluer le elo -> retirage de Pwn structure et rock eval
+        -> gain total 2.0.4 : 43.4 +/- 4.2 elo
+
+v2.0.3 Pwn sructure
+    - Évaluation pwn structure  (-3.8 +/- 4.7 elo)
+    - Évaluation rock           (-6.7 +/- 5.2 elo)
+
+
+v2.0.2 Time Control
+    - (Big changement de l'éval vers PeSTO, je sais pas exactement quand c'est)
+    - Changement du time control pour être réellement fiable avec l'UCI (ajout du handling de winc)
+
+BASE LEGACY v2.0.x

@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "types.h"
+#include "transposition_tables.h"
 #include "alphabeta.h"
 #include "chess_logic.h"
 #include "interface_uci_like.h"
@@ -37,7 +38,10 @@ void print_board(BoardState *board_s)
 }
 
 void test_self_engine(double time_white, double time_black)
-{
+{    
+    TranspoTable global_transpo_table;
+    initialize_transposition_table(&global_transpo_table, 1 << 20);
+
     PositionList *board_history = empty_list();
     BoardState *board_s = init_board();
     board_history = save_position(board_s, board_history);
@@ -55,11 +59,11 @@ void test_self_engine(double time_white, double time_black)
         */
         if (color == 'w')
         {
-            move = iterative_deepening(board_history, color, 20, time_white);
+            move = iterative_deepening(&global_transpo_table, board_history, color, 20, time_white);
         }
         else
         {
-            move = iterative_deepening(board_history, color, 20, time_black);
+            move = iterative_deepening(&global_transpo_table, board_history, color, 20, time_black);
         }
         board_s = move_piece(board_s, move);
         board_history = save_position(board_s, board_history);
@@ -101,6 +105,10 @@ void test_self_engine(double time_white, double time_black)
 void test_uci_solo()
 {
     char buffer[MAX_MSG_LENGTH] = {0};
+
+    TranspoTable global_transpo_table;
+    initialize_transposition_table(&global_transpo_table, 1 << 20);
+
     PositionList *board_history = malloc(sizeof(PositionList));
     if (board_history == NULL)
     {
@@ -130,7 +138,7 @@ void test_uci_solo()
     {
         strcpy(buffer, commands[i]);
         fprintf(stderr, "Debug: Received message from main program:\n %s\n\n", buffer);
-        handle_uci_command(buffer, board_history);
+        handle_uci_command(buffer, &global_transpo_table, board_history);
         i++;
     }
     free_position_list(board_history);
@@ -139,6 +147,10 @@ void test_uci_solo()
 void answer_uci()
 {
     char buffer[MAX_MSG_LENGTH] = {0};
+
+    TranspoTable global_transpo_table;
+    initialize_transposition_table(&global_transpo_table, 1 << 20);
+
     PositionList *board_history = malloc(sizeof(PositionList));
     if (board_history == NULL)
     {
@@ -160,7 +172,7 @@ void answer_uci()
         }
         fprintf(stderr, "Debug: Received message length from main program: %ld\n", strlen(buffer));
         fprintf(stderr, "Debug: Received message from main program: %s\n", buffer);
-        handle_uci_command(buffer, board_history);
+        handle_uci_command(buffer, &global_transpo_table, board_history);
         if (strcmp(buffer, "quit\n") == 0)
         {
             break;
@@ -172,9 +184,9 @@ void answer_uci()
 
 int main()
 {
-    init_eval_tables();
     // test_self_engine(1.0, 1.0);
     // test_uci_solo();
-    answer_uci();
+    init_eval_tables();
+    answer_uci(); // C'est dans cette fonction que tout est initialisé
     return 0;
 }
