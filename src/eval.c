@@ -6,8 +6,6 @@
 
 // Using PeSTO's piece-square tables and values
 
-extern int MAX_SCORE;
-
 const int PIECES_VALUES_MG[6] = {82, 337, 365, 477, 1025, 0};
 const int PIECES_VALUES_EG[6] = {94, 281, 297, 512, 936, 0};
 
@@ -410,7 +408,8 @@ int eval(PositionList *board_history)
 {
     int score = pieces_eval(board_history);
     // fprintf(stderr, "Pieces eval: %d\n", score);
-    // score += pawn_structure_eval(board_history->board_s);    // -3.8 +/- 4.7 elo
-    // score += castle_eval(board_history->board_s);            // -6.7 +/- 5.2 elo
+    // Pawn structure eval + castle eval : Elo difference: 16.0 +/- 9.5, LOS: 100.0 %, DrawRatio: 61.2 %
+    score += pawn_structure_eval(board_history->board_s);    
+    score += castle_eval(board_history->board_s);            
     return score;
 }

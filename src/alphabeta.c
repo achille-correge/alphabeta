@@ -11,8 +11,6 @@
 #include "debug_functions.h"
 #include "transposition_tables.h"
 
-const int MAX_SCORE = 100050;
-
 int alpha_beta_score(PositionList *board_history, char color, int is_max)
 {
     if ((is_max == 1 && color == 'w') || (is_max == 0 && color == 'b'))
@@ -102,7 +100,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     *nodes = *nodes + 1;
     MoveScore result;
     result.move = tested_move;
-    if (threefold_hash(board_history->board_s->hash, board_history, 0))
+    if (threefold_hash(board_history->board_s->hash, board_history, 1) && depth > 0)
     {
         result.score = 0;
         return result;

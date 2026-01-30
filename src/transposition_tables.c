@@ -77,7 +77,8 @@ void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score s
 bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, int beta, int *score, Move *best_move) {
     TranspoTableEntry *entry = get_transposition_table_entry(table, hash);
 
-    if (entry->hash == hash && entry->depth >= depth_to_go) {
+    if (entry->hash == hash && entry->depth >= depth_to_go && entry->score != 0) {
+        // Avoid using entries with zero score (could be polluted by contexts like threefold repetition)
         if (entry->flag == EXACT) {
             *score = entry->score;
             *best_move = entry->best_move;

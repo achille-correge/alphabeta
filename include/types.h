@@ -6,6 +6,7 @@
 
 #define MAX_SEARCH_PLY 128
 #define MAX_MOVES 128
+#define MAX_SCORE 100050
 
 typedef int Score;
 

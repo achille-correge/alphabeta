@@ -32,16 +32,24 @@ TranspositionTable (v2.0.5)
 // Historique des changements
 
 v2.0.5 TranspositionTable
+    - Ajout d'une transposition table de base, +13.6 +/- 2.3 fakeelo, mais 78% draw ratio
+    - Considération de nulle au bout d'une seule répétition mais -21.5 +/- 5.9 fakeelo, et 19.5% de draw ratio
+    - Avec une éval à -200 sur la 3fold repetition : 110.5 +/- 2.9 fakeelo, 61.3% de draw ratio
+  => Je viens de me rendre compte qu'avant avec CuteChess, j'avais 0.1s de time par game, au lieu de 10+0.1. Du coup les évals sont pas bonnes
+    - Retour des évals de structure de pions et de roque (16.0 +/- 9.5 elo)
+    - On ne considère PAS les nulles dans les transpos tables, même quand on les récupère (ça pourra être utile pour le move ordering par contre)
+        -> +46.5 +/- 10.0 elo
+    - 
 
 v2.0.4 Depth extension
     - Ajout d'une depth extention jusqu'à +8 en cas d'échec
-        -> +14.0 +/- 3.4 elo
-    - Utilisation de CuteChess pour évaluer le elo -> retirage de Pwn structure et rock eval
-        -> gain total 2.0.4 : 43.4 +/- 4.2 elo
+        -> +14.0 +/- 3.4 fakeelo
+    - Utilisation de CuteChess pour évaluer le fakeelo -> retirage de Pwn structure et rock eval
+        -> gain total 2.0.4 : 43.4 +/- 4.2 fakeelo
 
 v2.0.3 Pwn sructure
-    - Évaluation pwn structure  (-3.8 +/- 4.7 elo)
-    - Évaluation rock           (-6.7 +/- 5.2 elo)
+    - Évaluation pwn structure  (-3.8 +/- 4.7 fakeelo)
+    - Évaluation rock           (-6.7 +/- 5.2 fakeelo)
 
 
 v2.0.2 Time Control
