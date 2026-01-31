@@ -213,12 +213,12 @@ const Bitboard under_over_ranks[2][8] = {
     {0xFFFFFFFFFFFFFF00, 0xFFFFFFFFFFFF0000, 0xFFFFFFFFFF000000, 0xFFFFFFFF00000000, 0xFFFFFF0000000000, 0xFFFF000000000000, 0xFF00000000000000, 0x0000000000000000}};
 
 // evaluate pawn structure
-int one_pawn_structure_eval(BoardState *board_s, int x, int y, char color)
+int one_pawn_structure_eval(BoardState *board_s, int x, int y, Color color)
 {
     int score = 0;
-    Bitboard pawns = color == 'w' ? board_s->all_pieces_bb[WHITE][PAWN] : board_s->all_pieces_bb[BLACK][PAWN];
-    Bitboard opponent_pawns = color == 'w' ? board_s->all_pieces_bb[BLACK][PAWN] : board_s->all_pieces_bb[WHITE][PAWN];
-    Bitboard in_front_mask = under_over_ranks[color == 'w' ? 0 : 1][x];
+    Bitboard pawns = board_s->all_pieces_bb[color][PAWN];
+    Bitboard opponent_pawns = board_s->all_pieces_bb[1 - color][PAWN];
+    Bitboard in_front_mask = under_over_ranks[color == WHITE ? 0 : 1][x];
     Bitboard left_file = FILE_H << (7 - y + 1);
     Bitboard pwn_file = FILE_H << (7-y);
     Bitboard right_file = FILE_H << (7-y-1);
@@ -251,7 +251,7 @@ int one_pawn_structure_eval(BoardState *board_s, int x, int y, char color)
     // PASSED
     if ((opponent_pawns & left_file & right_file & in_front_mask) == 0)
     {
-        int advancement = color == 'w' ? x : (7 - x);
+        int advancement = color == WHITE ? x : (7 - x);
         score += passed_pawn_bonus[advancement];
     }
 
@@ -274,7 +274,7 @@ int pawn_structure_eval(BoardState *board_s)
         int square = __builtin_ctzll(white_pawns);
         int x = square / 8;
         int y = square % 8;
-        score += one_pawn_structure_eval(board_s, x, y, 'w');
+        score += one_pawn_structure_eval(board_s, x, y, WHITE);
         white_pawns &= white_pawns - 1;
     }
     while (black_pawns)
@@ -282,22 +282,22 @@ int pawn_structure_eval(BoardState *board_s)
         int square = __builtin_ctzll(black_pawns);
         int x = square / 8;
         int y = square % 8;
-        score -= one_pawn_structure_eval(board_s, x, y, 'b');
+        score -= one_pawn_structure_eval(board_s, x, y, BLACK);
         black_pawns &= black_pawns - 1;
     }
     return score;
 }
 
 
-bool check_for_mates(BoardState *board_s, char color, int *result)
+bool check_for_mates(BoardState *board_s, Color color, int *result)
 {
-    bool white_mate = is_mate(board_s, 'w');
-    bool black_mate = is_mate(board_s, 'b');
-    if (white_mate && is_check(board_s, 'w'))
+    bool white_mate = is_mate(board_s, WHITE);
+    bool black_mate = is_mate(board_s, BLACK);
+    if (white_mate && is_check(board_s, WHITE))
     {
         *result = -MAX_SCORE;
     }
-    else if (black_mate && is_check(board_s, 'b'))
+    else if (black_mate && is_check(board_s, BLACK))
     {
         *result = MAX_SCORE;
     }
@@ -358,15 +358,15 @@ int pieces_eval(PositionList *board_history)
         for (int j = 0; j < 8; j++)
         {
             Piece piece = board[i][j];
-            if (piece.color == 'w')
+            if (piece.color == WHITE)
             {
-                pieces_eval_mg += mg_table[WHITE][char_to_piece_type(piece.name)][i][j];
-                pieces_eval_eg += eg_table[WHITE][char_to_piece_type(piece.name)][i][j];
+                pieces_eval_mg += mg_table[WHITE][piece.name][i][j];
+                pieces_eval_eg += eg_table[WHITE][piece.name][i][j];
             }
-            else if (piece.color == 'b')
+            else if (piece.color == BLACK)
             {
-                pieces_eval_mg -= mg_table[BLACK][char_to_piece_type(piece.name)][i][j];
-                pieces_eval_eg -= eg_table[BLACK][char_to_piece_type(piece.name)][i][j];
+                pieces_eval_mg -= mg_table[BLACK][piece.name][i][j];
+                pieces_eval_eg -= eg_table[BLACK][piece.name][i][j];
             }
         }
     }

@@ -14,8 +14,8 @@ const int PIECES_PHASE_VALUES[6] = {0, 1, 1, 2, 4, 0};
 Piece empty_piece()
 {
     Piece piece;
-    piece.name = ' ';
-    piece.color = ' ';
+    piece.name = EMPTY_PIECE;
+    piece.color = EMPTY_COLOR;
     return piece;
 }
 
@@ -32,13 +32,13 @@ Move empty_move()
     Move move;
     move.init_co = empty_coords();
     move.dest_co = empty_coords();
-    move.promotion = ' ';
+    move.promotion = EMPTY_PIECE;
     return move;
 }
 
 bool is_empty(Piece piece)
 {
-    return piece.name == ' ' && piece.color == ' ';
+    return piece.name == EMPTY_PIECE && piece.color == EMPTY_COLOR;
 }
 
 bool is_empty_coords(Coords coords)
@@ -48,7 +48,7 @@ bool is_empty_coords(Coords coords)
 
 bool is_empty_move(Move move)
 {
-    return is_empty_coords(move.init_co) && is_empty_coords(move.dest_co) && move.promotion == ' ';
+    return is_empty_coords(move.init_co) && is_empty_coords(move.dest_co) && move.promotion == EMPTY_PIECE;
 }
 
 bool are_same_piece(Piece piece1, Piece piece2)
@@ -76,6 +76,10 @@ Color char_to_color(char c)
 
 PieceType char_to_piece_type(char c)
 {
+    // Handle both uppercase and lowercase (UCI uses lowercase for promotions)
+    if (c >= 'a' && c <= 'z')
+        c = c - 'a' + 'A';
+    
     switch (c)
     {
     case 'P':
@@ -91,7 +95,30 @@ PieceType char_to_piece_type(char c)
     case 'K':
         return KING;
     default:
-        return -1;
+        return EMPTY_PIECE;
+    }
+}
+
+char piece_type_to_char(PieceType type)
+{
+    switch (type)
+    {
+    case PAWN:
+        return 'P';
+    case KNIGHT:
+        return 'N';
+    case BISHOP:
+        return 'B';
+    case ROOK:
+        return 'R';
+    case QUEEN:
+        return 'Q';
+    case KING:
+        return 'K';
+    case EMPTY_PIECE:
+        return ' ';
+    default:
+        return ' ';
     }
 }
 
@@ -238,25 +265,25 @@ bool can_move_heuristic(BoardState *board_s, Piece piece, Coords init_co, Coords
     int i = new_co.x;
     int j = new_co.y;
     // clang-format off
-    return !(piece.name == ' ')
-        && !(piece.name == 'P' && (abs(init_co.x - i) > 2 || abs(init_co.y - j) > 1))
-        && !(piece.name == 'N' && abs(init_co.x - i) + abs(init_co.y - j) != 3)
-        && !(piece.name == 'B' && abs(init_co.x - i) != abs(init_co.y - j))
-        && !(piece.name == 'R' && init_co.x != i && init_co.y != j)
-        && !(piece.name == 'Q' && (abs(init_co.x - i) != abs(init_co.y - j) && init_co.x != i && init_co.y != j))
-        && !(piece.name == 'K' &&( abs(init_co.x - i) > 1 || abs(init_co.y - j) > 2))
+    return !(piece.name == EMPTY_PIECE)
+        && !(piece.name == PAWN && (abs(init_co.x - i) > 2 || abs(init_co.y - j) > 1))
+        && !(piece.name == KNIGHT && abs(init_co.x - i) + abs(init_co.y - j) != 3)
+        && !(piece.name == BISHOP && abs(init_co.x - i) != abs(init_co.y - j))
+        && !(piece.name == ROOK && init_co.x != i && init_co.y != j)
+        && !(piece.name == QUEEN && (abs(init_co.x - i) != abs(init_co.y - j) && init_co.x != i && init_co.y != j))
+        && !(piece.name == KING &&( abs(init_co.x - i) > 1 || abs(init_co.y - j) > 2))
         && can_move(board_s, piece, init_co, new_co, check_would_stop);
     // clang-format on
 }
 
-bool is_attacked(BoardState *board_s, Coords co, char color, bool check_would_stop)
+bool is_attacked(BoardState *board_s, Coords co, Color color, bool check_would_stop)
 {
     for (int i = 0; i < 8; i++)
     {
         for (int j = 0; j < 8; j++)
         {
             Piece piece = board_s->board[i][j];
-            if (piece.color != color)
+            if (!is_empty(piece) && piece.color != color)
             {
                 Coords piece_coords;
                 piece_coords.x = i;
@@ -278,33 +305,33 @@ BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest
 
     // fprintf(stderr, "move_pawn_handling: color: %c, init_coords: (%d, %d), new_coords: (%d, %d)\n", move_piece.color, init_coords.x, init_coords.y, new_coords.x, new_coords.y);
     // fprintf(stderr, "dest_piece: %c, %c\n", dest_piece.name, dest_piece.color);
-    if ((move_piece.color == 'w' && new_coords.x == 7) || (move_piece.color == 'b' && new_coords.x == 0))
+    if ((move_piece.color == WHITE && new_coords.x == 7) || (move_piece.color == BLACK && new_coords.x == 0))
     {
-        Color color = move_piece.color == 'w' ? WHITE : BLACK;
+        Color color = move_piece.color == WHITE ? WHITE : BLACK;
         board_s->board[new_coords.x][new_coords.y].name = sel_move.promotion;
-        board_s->all_pieces_bb[color][char_to_piece_type(sel_move.promotion)] |= 1ULL << coords_to_square(new_coords);
+        board_s->all_pieces_bb[color][sel_move.promotion] |= 1ULL << coords_to_square(new_coords);
         board_s->all_pieces_bb[color][PAWN] &= ~(1ULL << coords_to_square(new_coords));
-        board_s->phase += PIECES_PHASE_VALUES[char_to_piece_type(sel_move.promotion)];
+        board_s->phase += PIECES_PHASE_VALUES[sel_move.promotion];
     }
-    if (move_piece.color == 'w' && new_coords.x - init_coords.x == 2)
+    if (move_piece.color == WHITE && new_coords.x - init_coords.x == 2)
     {
         // fprintf(stderr, "2 pas, color: %c, init_coords: (%d, %d), new_coords: (%d, %d)\n", move_piece.color, init_coords.x, init_coords.y, new_coords.x, new_coords.y);
         board_s->white_pawn_passant = new_coords.y;
         board_s->hash ^= zobrist_table[772+ new_coords.y]; // add en passant square to the hash, 772 = white en passant
     }
-    else if (move_piece.color == 'b' && init_coords.x - new_coords.x == 2)
+    else if (move_piece.color == BLACK && init_coords.x - new_coords.x == 2)
     {
         board_s->black_pawn_passant = new_coords.y;
         board_s->hash ^= zobrist_table[780 + new_coords.y]; // add en passant square to the hash, 780 = black en passant
     }
-    if (move_piece.color == 'w' && is_empty(dest_piece) && new_coords.y != init_coords.y)
+    if (move_piece.color == WHITE && is_empty(dest_piece) && new_coords.y != init_coords.y)
     {
         board_s->board[new_coords.x - 1][new_coords.y] = empty_piece();
         board_s->color_bb[BLACK] &= ~(1ULL << (39 - new_coords.y)); // 39 = 4 * 8 + 7 (to get the fith row)
         board_s->all_pieces_bb[BLACK][PAWN] &= ~(1ULL << (39 - new_coords.y));
         board_s->hash ^= zobrist_table[6 * 64 + (39 - new_coords.y)]; // remove the captured pawn from the hash, 6 = black pawns
     }
-    else if (move_piece.color == 'b' && is_empty(dest_piece) && new_coords.y != init_coords.y)
+    else if (move_piece.color == BLACK && is_empty(dest_piece) && new_coords.y != init_coords.y)
     {
         board_s->board[new_coords.x + 1][new_coords.y] = empty_piece();
         board_s->color_bb[WHITE] &= ~(1ULL << (31 - new_coords.y)); // 31 = 3 * 8 + 7 (to get the second row)
@@ -316,8 +343,8 @@ BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest
 
 BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coords, Coords new_coords)
 {
-    Color color = piece.color == 'w' ? WHITE : BLACK;
-    if (piece.color == 'w')
+    Color color = piece.color == WHITE ? WHITE : BLACK;
+    if (piece.color == WHITE)
     {
         board_s->white_kingside_castlable = false;
         board_s->white_queenside_castlable = false;
@@ -333,7 +360,7 @@ BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coo
     }
     if (new_coords.y == 6 && init_coords.y == 4)
     {
-        board_s->board[new_coords.x][5].name = 'R';
+        board_s->board[new_coords.x][5].name = ROOK;
         board_s->board[new_coords.x][5].color = piece.color;
         board_s->board[new_coords.x][7] = empty_piece();
         board_s->color_bb[color] ^= 1UL << (8 * new_coords.x);
@@ -345,7 +372,7 @@ BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coo
     }
     else if (new_coords.y == 2 && init_coords.y == 4)
     {
-        board_s->board[new_coords.x][3].name = 'R';
+        board_s->board[new_coords.x][3].name = ROOK;
         board_s->board[new_coords.x][3].color = piece.color;
         board_s->board[new_coords.x][0] = empty_piece();
         board_s->color_bb[color] ^= 1UL << (8 * new_coords.x + 7);
@@ -360,22 +387,22 @@ BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coo
 
 BoardState *move_rook_handling(BoardState *board_s, Piece piece, Coords init_coords, Coords new_coords)
 {
-    if (piece.color == 'w' && init_coords.x == 0 && init_coords.y == 0)
+    if (piece.color == WHITE && init_coords.x == 0 && init_coords.y == 0)
     {
         board_s->white_queenside_castlable = false;
         board_s->hash ^= zobrist_table[769]; // remove white queenside castling right from the hash, 769 = white queenside
     }
-    else if (piece.color == 'w' && init_coords.x == 0 && init_coords.y == 7)
+    else if (piece.color == WHITE && init_coords.x == 0 && init_coords.y == 7)
     {
         board_s->white_kingside_castlable = false;
         board_s->hash ^= zobrist_table[768]; // remove white kingside castling right from the hash, 768 = white kingside
     }
-    else if (piece.color == 'b' && init_coords.x == 7 && init_coords.y == 0)
+    else if (piece.color == BLACK && init_coords.x == 7 && init_coords.y == 0)
     {
         board_s->black_queenside_castlable = false;
         board_s->hash ^= zobrist_table[771]; // remove black queenside castling right from the hash, 771 = black queenside
     }
-    else if (piece.color == 'b' && init_coords.x == 7 && init_coords.y == 7)
+    else if (piece.color == BLACK && init_coords.x == 7 && init_coords.y == 7)
     {
         board_s->black_kingside_castlable = false;
         board_s->hash ^= zobrist_table[770]; // remove black kingside castling right from the hash, 770 = black kingside
@@ -389,10 +416,8 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
     Coords new_coords = sel_move.dest_co;
     Piece move_piece = get_piece(board_s->board, init_coords);
     Piece dest_piece = get_piece(board_s->board, new_coords);
-    Color color = char_to_color(move_piece.color);
+    Color color = move_piece.color;
     Color enemy_color = color == WHITE ? BLACK : WHITE;
-    PieceType move_piece_type = char_to_piece_type(move_piece.name);
-    PieceType dest_piece_type = char_to_piece_type(dest_piece.name);
     if (is_empty(move_piece))
     {
         return board_s;
@@ -413,23 +438,23 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
     board_s->board[new_coords.x][new_coords.y].name = move_piece.name;
     board_s->board[new_coords.x][new_coords.y].color = move_piece.color;
     board_s->color_bb[color] |= 1ULL << coords_to_square(new_coords);
-    board_s->all_pieces_bb[color][move_piece_type] |= 1ULL << coords_to_square(new_coords);
-    board_s->hash ^= zobrist_table[(move_piece_type + 6 * color) * 64 + 8*new_coords.x + new_coords.y]; // add the moved piece to the hash
+    board_s->all_pieces_bb[color][move_piece.name] |= 1ULL << coords_to_square(new_coords);
+    board_s->hash ^= zobrist_table[(move_piece.name + 6 * color) * 64 + 8*new_coords.x + new_coords.y]; // add the moved piece to the hash
     // remove the piece from the old location
     board_s->board[init_coords.x][init_coords.y] = empty_piece();
     board_s->color_bb[color] ^= 1ULL << coords_to_square(init_coords);
-    board_s->all_pieces_bb[color][move_piece_type] ^= 1ULL << coords_to_square(init_coords);
-    board_s->hash ^= zobrist_table[(move_piece_type + 6 * color) * 64 + 8*init_coords.x + init_coords.y]; // remove the moved piece from the hash
+    board_s->all_pieces_bb[color][move_piece.name] ^= 1ULL << coords_to_square(init_coords);
+    board_s->hash ^= zobrist_table[(move_piece.name + 6 * color) * 64 + 8*init_coords.x + init_coords.y]; // remove the moved piece from the hash
     // remove the piece from the enemy if it exists
-    if (dest_piece.color != ' ')
+    if (dest_piece.color != EMPTY_COLOR)
     {
         board_s->color_bb[enemy_color] ^= 1ULL << coords_to_square(new_coords);
-        board_s->all_pieces_bb[enemy_color][dest_piece_type] ^= 1ULL << coords_to_square(new_coords);
-        board_s->phase -= PIECES_PHASE_VALUES[dest_piece_type];
-        board_s->hash ^= zobrist_table[(dest_piece_type + 6 * enemy_color) * 64 + 8*new_coords.x + new_coords.y]; // remove the captured piece from the hash
+        board_s->all_pieces_bb[enemy_color][dest_piece.name] ^= 1ULL << coords_to_square(new_coords);
+        board_s->phase -= PIECES_PHASE_VALUES[dest_piece.name];
+        board_s->hash ^= zobrist_table[(dest_piece.name + 6 * enemy_color) * 64 + 8*new_coords.x + new_coords.y]; // remove the captured piece from the hash
     }
     // fifty move rule
-    if (dest_piece.name == ' ' && move_piece.name != 'P')
+    if (is_empty(dest_piece) && move_piece.name != PAWN)
     {
         board_s->fifty_move_rule++;
     }
@@ -438,15 +463,15 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
         board_s->fifty_move_rule = 0;
     }
     // handle special moves
-    if (move_piece.name == 'P')
+    if (move_piece.name == PAWN)
     {
         board_s = move_pawn_handling(board_s, move_piece, dest_piece, sel_move);
     }
-    else if (move_piece.name == 'K')
+    else if (move_piece.name == KING)
     {
         board_s = move_king_handling(board_s, move_piece, init_coords, new_coords);
     }
-    else if (move_piece.name == 'R')
+    else if (move_piece.name == ROOK)
     {
         board_s = move_rook_handling(board_s, move_piece, init_coords, new_coords);
     }
@@ -470,22 +495,22 @@ BoardState *move_piece_forced(BoardState *board_s, Move cur_move)
     }
     Piece move_piece = get_piece(board_s->board, init_coords);
     //  castling
-    if (move_piece.name == 'K' && new_coords.y == 6 && init_coords.y == 4)
+    if (move_piece.name == KING && new_coords.y == 6 && init_coords.y == 4)
     {
-        board_s->board[new_coords.x][5].name = 'R';
+        board_s->board[new_coords.x][5].name = ROOK;
         board_s->board[new_coords.x][5].color = move_piece.color;
         board_s->board[new_coords.x][7] = empty_piece();
     }
-    else if (move_piece.name == 'K' && new_coords.y == 2 && init_coords.y == 4)
+    else if (move_piece.name == KING && new_coords.y == 2 && init_coords.y == 4)
     {
-        board_s->board[new_coords.x][3].name = 'R';
+        board_s->board[new_coords.x][3].name = ROOK;
         board_s->board[new_coords.x][3].color = move_piece.color;
         board_s->board[new_coords.x][0] = empty_piece();
     }
     // en passant
-    if (move_piece.name == 'P' && is_empty(board_s->board[new_coords.x][new_coords.y]) && new_coords.y != init_coords.y && ((init_coords.x == 3 && new_coords.x == 2) || (init_coords.x == 4 && new_coords.x == 5)))
+    if (move_piece.name == PAWN && is_empty(board_s->board[new_coords.x][new_coords.y]) && new_coords.y != init_coords.y && ((init_coords.x == 3 && new_coords.x == 2) || (init_coords.x == 4 && new_coords.x == 5)))
     {
-        if (move_piece.color == 'w')
+        if (move_piece.color == WHITE)
         {
             board_s->board[new_coords.x + 1][new_coords.y] = empty_piece();
         }
@@ -497,7 +522,7 @@ BoardState *move_piece_forced(BoardState *board_s, Move cur_move)
     // normal move
     board_s->board[new_coords.x][new_coords.y].name = move_piece.name;
     // promotion
-    if (((move_piece.color == 'w' && new_coords.x == 7) || (move_piece.color == 'b' && new_coords.x == 0)) && cur_move.promotion != ' ')
+    if (((move_piece.color == WHITE && new_coords.x == 7) || (move_piece.color == BLACK && new_coords.x == 0)) && cur_move.promotion != EMPTY_PIECE)
     {
         board_s->board[new_coords.x][new_coords.y].name = cur_move.promotion;
     }
@@ -507,7 +532,7 @@ BoardState *move_piece_forced(BoardState *board_s, Move cur_move)
     return board_s;
 }
 
-Coords find_king(BoardState *board_s, char color)
+Coords find_king(BoardState *board_s, Color color)
 {
     Piece(*board)[8] = board_s->board;
     Coords king_coords = empty_coords();
@@ -516,7 +541,7 @@ Coords find_king(BoardState *board_s, char color)
         for (int j = 0; j < 8; j++)
         {
             Piece piece = board[i][j];
-            if (piece.name == 'K' && piece.color == color)
+            if (piece.name == KING && piece.color == color)
             {
                 king_coords.x = i;
                 king_coords.y = j;
@@ -527,13 +552,13 @@ Coords find_king(BoardState *board_s, char color)
     return king_coords;
 }
 
-bool is_check(BoardState *board_s, char color)
+bool is_check(BoardState *board_s, Color color)
 {
     Coords king_coords = find_king(board_s, color);
     return is_attacked(board_s, king_coords, color, false);
 }
 
-bool is_mate(BoardState *board_s, char color)
+bool is_mate(BoardState *board_s, Color color)
 {
     Piece(*board)[8] = board_s->board;
     Coords init_coords;
@@ -566,7 +591,7 @@ bool is_mate(BoardState *board_s, char color)
     return true;
 }
 
-bool is_checkmate(BoardState *board_s, char color)
+bool is_checkmate(BoardState *board_s, Color color)
 {
     if (!is_check(board_s, color))
     {
@@ -575,7 +600,7 @@ bool is_checkmate(BoardState *board_s, char color)
     return is_mate(board_s, color);
 }
 
-bool is_stalemate(BoardState *board_s, char color)
+bool is_stalemate(BoardState *board_s, Color color)
 {
     if (is_check(board_s, color))
     {
@@ -595,29 +620,29 @@ BoardState *init_board()
     {
         for (int j = 0; j < 8; j++)
         {
-            board_s->board[i][j].name = ' ';
-            board_s->board[i][j].color = ' ';
+            board_s->board[i][j].name = EMPTY_PIECE;
+            board_s->board[i][j].color = EMPTY_COLOR;
         }
     }
     for (int i = 0; i < 8; i++)
     {
-        board_s->board[1][i].name = 'P';
-        board_s->board[6][i].name = 'P';
-        board_s->board[0][i].color = 'w';
-        board_s->board[1][i].color = 'w';
-        board_s->board[6][i].color = 'b';
-        board_s->board[7][i].color = 'b';
+        board_s->board[1][i].name = PAWN;
+        board_s->board[6][i].name = PAWN;
+        board_s->board[0][i].color = WHITE;
+        board_s->board[1][i].color = WHITE;
+        board_s->board[6][i].color = BLACK;
+        board_s->board[7][i].color = BLACK;
     }
     for (int i = 0; i < 8; i = i + 7)
     {
-        board_s->board[i][0].name = 'R';
-        board_s->board[i][7].name = 'R';
-        board_s->board[i][1].name = 'N';
-        board_s->board[i][6].name = 'N';
-        board_s->board[i][2].name = 'B';
-        board_s->board[i][5].name = 'B';
-        board_s->board[i][3].name = 'Q';
-        board_s->board[i][4].name = 'K';
+        board_s->board[i][0].name = ROOK;
+        board_s->board[i][7].name = ROOK;
+        board_s->board[i][1].name = KNIGHT;
+        board_s->board[i][6].name = KNIGHT;
+        board_s->board[i][2].name = BISHOP;
+        board_s->board[i][5].name = BISHOP;
+        board_s->board[i][3].name = QUEEN;
+        board_s->board[i][4].name = KING;
     }
     board_s->white_kingside_castlable = true;
     board_s->white_queenside_castlable = true;
@@ -690,8 +715,8 @@ BoardState *FEN_to_board(char *FEN)
         {
             for (int k = 0; k < FEN[i] - '0'; k++)
             {
-                board_s->board[7 - xx][y].name = ' ';
-                board_s->board[7 - xx][y].color = ' ';
+                board_s->board[7 - xx][y].name = EMPTY_PIECE;
+                board_s->board[7 - xx][y].color = EMPTY_COLOR;
                 y++;
             }
         }
@@ -699,15 +724,15 @@ BoardState *FEN_to_board(char *FEN)
         {
             if (FEN[i] >= 'A' && FEN[i] <= 'Z')
             {
-                board_s->board[7 - xx][y].color = 'w';
-                board_s->board[7 - xx][y].name = FEN[i];
+                board_s->board[7 - xx][y].color = WHITE;
+                board_s->board[7 - xx][y].name = char_to_piece_type(FEN[i]);
                 board_s->color_bb[WHITE] |= 1ULL << (8 * (7 - xx) + 7 - y);
                 board_s->all_pieces_bb[WHITE][char_to_piece_type(FEN[i])] |= 1ULL << (8 * (7 - xx) + 7 - y);
             }
             else
             {
-                board_s->board[7 - xx][y].color = 'b';
-                board_s->board[7 - xx][y].name = FEN[i] - 'a' + 'A';
+                board_s->board[7 - xx][y].color = BLACK;
+                board_s->board[7 - xx][y].name = char_to_piece_type(FEN[i] - 'a' + 'A');
                 board_s->color_bb[BLACK] |= 1ULL << (8 * (7 - xx) + 7 - y);
                 board_s->all_pieces_bb[BLACK][char_to_piece_type(FEN[i] - 'a' + 'A')] |= 1ULL << (8 * (7 - xx) + 7 - y);
             }
@@ -791,7 +816,7 @@ bool can_move(BoardState *board_s, Piece piece, Coords init_co, Coords new_co, b
         Move sel_move;
         sel_move.init_co = init_co;
         sel_move.dest_co = new_co;
-        sel_move.promotion = ' ';
+        sel_move.promotion = EMPTY_PIECE;
         *new_board_s = *board_s;
         // fprintf(stderr, "can_move: %c (%d, %d) -> (%d, %d)\n", piece.name, init_co.x, init_co.y, new_co.x, new_co.y);
         new_board_s = move_piece_forced(new_board_s, sel_move);
@@ -806,17 +831,17 @@ bool can_move(BoardState *board_s, Piece piece, Coords init_co, Coords new_co, b
     // fprintf(stderr, "piece is %c of color %c\n", piece.name, piece.color);
     switch (piece.name)
     {
-    case 'P':
+    case PAWN:
         return can_move_pawn(board_s, piece, init_co, new_co);
-    case 'R':
+    case ROOK:
         return can_move_rook(board_s, init_co, new_co);
-    case 'N':
+    case KNIGHT:
         return can_move_knight(board_s, init_co, new_co);
-    case 'B':
+    case BISHOP:
         return can_move_bishop(board_s, init_co, new_co);
-    case 'Q':
+    case QUEEN:
         return can_move_queen(board_s, init_co, new_co);
-    case 'K':
+    case KING:
         return can_move_king(board_s, piece, init_co, new_co);
     default:
         return false;

@@ -18,6 +18,7 @@ bool is_empty_move(Move move);
 int coords_to_square(Coords co);
 Coords square_to_coords(int square);
 PieceType char_to_piece_type(char c);
+char piece_type_to_char(PieceType type);
 PositionList *empty_list();
 void free_position_list(PositionList *pos_l);
 int pos_list_length(PositionList *pos_l);
@@ -31,11 +32,11 @@ bool threefold_hash(uint64_t hash, PositionList *pos_l, int number_of_repetition
 bool insufficient_material(BoardState *board_s);
 
 // check functions
-bool is_attacked(BoardState *board_s, Coords co, char color, bool check_would_stop);
-bool is_check(BoardState *board_s, char color);
-bool is_mate(BoardState *board_s, char color);
-bool is_checkmate(BoardState *board_s, char color);
-bool is_stalemate(BoardState *board_s, char color);
+bool is_attacked(BoardState *board_s, Coords co, Color color, bool check_would_stop);
+bool is_check(BoardState *board_s, Color color);
+bool is_mate(BoardState *board_s, Color color);
+bool is_checkmate(BoardState *board_s, Color color);
+bool is_stalemate(BoardState *board_s, Color color);
 
 // move functions
 BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest_piece, Move sel_move);

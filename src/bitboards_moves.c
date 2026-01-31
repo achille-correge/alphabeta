@@ -284,11 +284,12 @@ void add_move_co(MoveList *move_list, int init_square, int dest_square, PieceTyp
 {
     if (piece_type == PAWN && (dest_square / 8 == 0 || dest_square / 8 == 7))
     {
+        PieceType promotions[] = {QUEEN, KNIGHT, BISHOP, ROOK};
         for (int p = 0; p < 4; p++)
         {
             move_list->moves[move_list->size].init_co = square_to_coords(init_square);
             move_list->moves[move_list->size].dest_co = square_to_coords(dest_square);
-            move_list->moves[move_list->size].promotion = "QNBR"[p];
+            move_list->moves[move_list->size].promotion = promotions[p];
             move_list->size++;
         }
     }
@@ -296,7 +297,7 @@ void add_move_co(MoveList *move_list, int init_square, int dest_square, PieceTyp
     {
         move_list->moves[move_list->size].init_co = square_to_coords(init_square);
         move_list->moves[move_list->size].dest_co = square_to_coords(dest_square);
-        move_list->moves[move_list->size].promotion = ' ';
+        move_list->moves[move_list->size].promotion = EMPTY_PIECE;
         move_list->size++;
     }
 }
@@ -401,6 +402,9 @@ Bitboard get_piece_moves(BoardState *board_s, PieceType piece_type, bool is_chec
                 piece_moves = get_king_pseudo_moves(piece, board_s->color_bb[WHITE], board_s->color_bb[WHITE] | board_s->color_bb[BLACK], get_attacks(board_s), WHITE, board_s->white_kingside_castlable, board_s->white_queenside_castlable);
             else
                 piece_moves = get_king_pseudo_moves(piece, board_s->color_bb[BLACK], board_s->color_bb[WHITE] | board_s->color_bb[BLACK], get_attacks(board_s), BLACK, board_s->black_kingside_castlable, board_s->black_queenside_castlable);
+            break;
+        default:
+            piece_moves = 0;
             break;
         }
         legal_moves |= get_single_piece_legal_moves(piece, piece_moves, board_s, piece_type, is_check, move_list);

@@ -12,9 +12,12 @@ void print_answer(Move best_move)
         printf("bestmove (none)\n");
         fflush(stdout);
     }
-    else if (best_move.promotion != ' ')
+    else if (best_move.promotion != EMPTY_PIECE)
     {
-        printf("bestmove %c%c%c%c%c\n", best_move.init_co.y + 'a', best_move.init_co.x + '1', best_move.dest_co.y + 'a', best_move.dest_co.x + '1', best_move.promotion);
+        char promo_char = piece_type_to_char(best_move.promotion);
+        if (promo_char >= 'A' && promo_char <= 'Z')
+            promo_char = promo_char - 'A' + 'a'; // UCI uses lowercase
+        printf("bestmove %c%c%c%c%c\n", best_move.init_co.y + 'a', best_move.init_co.x + '1', best_move.dest_co.y + 'a', best_move.dest_co.x + '1', promo_char);
         fflush(stdout);
     }
     else
@@ -44,16 +47,11 @@ PositionList *parse_moves(char *token, PositionList *board_history)
         move.dest_co.y = token[2] - 'a';
         if (token[4] != '\0' && token[4] != '\n')
         {
-            move.promotion = token[4];
-            // Convert lowercase promotion to uppercase (UCI uses lowercase)
-            if (move.promotion >= 'a' && move.promotion <= 'z')
-            {
-                move.promotion = move.promotion - 'a' + 'A';
-            }
+            move.promotion = char_to_piece_type(token[4]);
         }
         else
         {
-            move.promotion = ' ';
+            move.promotion = EMPTY_PIECE;
         }
         new_board_s = move_piece(new_board_s, move);
         board_history = save_position(new_board_s, board_history);
@@ -181,7 +179,7 @@ void parse_go(char *token, TranspoTable *tt, PositionList *board_history)
     double increment = board_history->board_s->player == WHITE ? winc : binc;
     int moves_to_go = 40; // default value
     double time = time_for_move(time_left, increment, moves_to_go);
-    char color = board_history->board_s->player == WHITE ? 'w' : 'b';
+    Color color = board_history->board_s->player;
     Move best_move = iterative_deepening(tt, board_history, color, depth, time);
     print_answer(best_move);
     print_board_debug(move_piece(board_history->board_s, best_move));
@@ -197,7 +195,7 @@ void handle_uci_command(char *command, TranspoTable *tt, PositionList *board_his
     char *token = strtok(command, " ");
     if (strcmp(token, "uci\n") == 0)
     {
-        printf("id name felabot 2.0.5_tt\n");
+        printf("id name felabot 2.1.0_nochar\n");
         fflush(stdout);
         printf("id author Achille Correge\n");
         fflush(stdout);

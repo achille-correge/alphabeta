@@ -19,11 +19,11 @@ void print_board(BoardState *board_s)
         printf("%d ", i + 1);
         for (int j = 0; j < 8; j++)
         {
-            if (board[i][j].color == 'w')
+            if (board[i][j].color == WHITE)
             {
                 printf("%c ", board[i][j].name);
             }
-            else if (board[i][j].color == 'b')
+            else if (board[i][j].color == BLACK)
             {
                 printf("%c ", board[i][j].name + 32);
             }
@@ -46,7 +46,7 @@ void test_self_engine(double time_white, double time_black)
     BoardState *board_s = init_board();
     board_history = save_position(board_s, board_history);
     Move move = empty_move();
-    char color = 'w';
+    Color color = WHITE;
     print_board(board_s);
 
     for (int i = 0; i < 1000; i++)
@@ -57,7 +57,7 @@ void test_self_engine(double time_white, double time_black)
         fflush(stdin); // option ONE to clean stdin
         getchar();     // wait for ENTER
         */
-        if (color == 'w')
+        if (color == WHITE)
         {
             move = iterative_deepening(&global_transpo_table, board_history, color, 20, time_white);
         }
@@ -68,7 +68,7 @@ void test_self_engine(double time_white, double time_black)
         board_s = move_piece(board_s, move);
         board_history = save_position(board_s, board_history);
 
-        color = color == 'w' ? 'b' : 'w';
+        color = color == WHITE ? BLACK : WHITE;
         print_board(board_s);
         print_move(move);
         if (is_check(board_s, color))

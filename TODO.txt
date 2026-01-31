@@ -24,10 +24,6 @@ CLEAN DU CODE (v2.1) :
     - Improve l'UCI avec des options supplémentaires
 
 
-TranspositionTable (v2.0.5)
-    - Faire une table de transposition qui marche et fait pas perdre trop d'elo
-    - Si ça marche pas, ajouter une table d'historique
-
 
 // Historique des changements
 

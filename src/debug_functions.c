@@ -43,13 +43,13 @@ void print_board_debug(BoardState *board_s)
         fprintf(stderr, "%d ", i);
         for (int j = 0; j < 8; j++)
         {
-            if (board[i][j].color == 'w')
+            if (board[i][j].color == WHITE)
             {
-                fprintf(stderr, "%c ", board[i][j].name);
+                fprintf(stderr, "%c ", piece_type_to_char(board[i][j].name));
             }
-            else if (board[i][j].color == 'b')
+            else if (board[i][j].color == BLACK)
             {
-                fprintf(stderr, "%c ", board[i][j].name + 32);
+                fprintf(stderr, "%c ", piece_type_to_char(board[i][j].name) + 32);
             }
             else
             {
@@ -132,11 +132,11 @@ void print_differences(MoveList *move_list, MoveList *move_list_bb)
     }
 }
 
-void verify_and_print_differences(MoveList *move_list, MoveList *move_list2, PositionList *board_history, char color)
+void verify_and_print_differences(MoveList *move_list, MoveList *move_list2, PositionList *board_history, Color color)
 {
     if (!are_same_move_set(move_list, move_list2))
     {
-        fprintf(stderr, "\n\nplayer: %c\n\n", color);
+        fprintf(stderr, "\n\nplayer: %d\n\n", color);
         fprintf(stderr, "move_list size: %d\n", move_list->size);
         print_bitboard(get_targetbb_move_list(move_list));
         // print_move_list(move_list);

@@ -11,9 +11,9 @@
 #include "debug_functions.h"
 #include "transposition_tables.h"
 
-int alpha_beta_score(PositionList *board_history, char color, int is_max)
+int alpha_beta_score(PositionList *board_history, Color color, int is_max)
 {
-    if ((is_max == 1 && color == 'w') || (is_max == 0 && color == 'b'))
+    if ((is_max == 1 && color == WHITE) || (is_max == 0 && color == BLACK))
     {
         return eval(board_history);
     }
@@ -23,7 +23,7 @@ int alpha_beta_score(PositionList *board_history, char color, int is_max)
     }
 }
 
-MoveList *possible_moves(BoardState *board_s, char color)
+MoveList *possible_moves(BoardState *board_s, Color color)
 {
     MoveList *move_list = malloc(sizeof(MoveList));
     if (move_list == NULL)
@@ -46,12 +46,13 @@ MoveList *possible_moves(BoardState *board_s, char color)
                         Coords dest_co = {k, l};
                         if (can_move_heuristic(board_s, piece, init_co, dest_co, true))
                         {
-                            Move move = {init_co, dest_co, ' '};
-                            if (piece.name == 'P' && (dest_co.x == 0 || dest_co.x == 7))
+                            Move move = {init_co, dest_co, EMPTY_PIECE};
+                            if (piece.name == PAWN && (dest_co.x == 0 || dest_co.x == 7))
                             {
+                                PieceType promotions[] = {QUEEN, KNIGHT, BISHOP, ROOK};
                                 for (int p = 0; p < 4; p++)
                                 {
-                                    move.promotion = "QNBR"[p];
+                                    move.promotion = promotions[p];
                                     move_list->moves[move_list->size] = move;
                                     move_list->size++;
                                 }
@@ -95,7 +96,7 @@ typedef struct
 // nodes is the number of nodes checked
 // return the score of the best move
 
-MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, char color, Move tested_move, int is_max, int is_min, int *nodes, clock_t start_clk, double max_time, Move prio_move)
+MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, int is_min, int *nodes, clock_t start_clk, double max_time, Move prio_move)
 {
     *nodes = *nodes + 1;
     MoveScore result;
@@ -147,7 +148,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         return result;
     }
     new_board_history->tail = board_history;
-    char next_color = color == 'w' ? 'b' : 'w';
+    Color next_color = color == WHITE ? BLACK : WHITE;
     double time_taken;
     // Check transposition table
     int depth_to_go = max_depth - depth;
@@ -264,7 +265,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
 // max_depth is the maximum depth of the search
 // return the best move found
 
-Move iterative_deepening(TranspoTable *tt, PositionList *board_history, char color, int max_depth, double max_time)
+Move iterative_deepening(TranspoTable *tt, PositionList *board_history, Color color, int max_depth, double max_time)
 {
     clock_t glob_start = clock();
     Move move = empty_move();

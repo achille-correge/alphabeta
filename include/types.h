@@ -12,26 +12,28 @@ typedef int Score;
 
 typedef uint64_t Bitboard;
 
-typedef enum
+typedef enum : uint8_t
 {
     WHITE,
-    BLACK
+    BLACK,
+    EMPTY_COLOR
 } Color;
 
-typedef enum
+typedef enum : uint8_t
 {
     PAWN,
     KNIGHT,
     BISHOP,
     ROOK,
     QUEEN,
-    KING
+    KING,
+    EMPTY_PIECE
 } PieceType;
 
 typedef struct
 {
-    char name;  // name of the piece
-    char color; // color of the piece ('w' for white, 'b' for black, ' ' for empty)
+    PieceType name;  // name of the piece
+    Color color; // color of the piece ('w' for white, 'b' for black, ' ' for empty)
 } Piece;
 
 typedef struct
@@ -44,7 +46,7 @@ typedef struct
 {
     Coords init_co;
     Coords dest_co;
-    char promotion;
+    PieceType promotion;
 } Move;
 
 typedef struct
@@ -78,7 +80,7 @@ typedef struct
     int size;
 } MoveList;
 
-typedef enum
+typedef enum : uint8_t
 {
     EXACT,
     LOWERBOUND,

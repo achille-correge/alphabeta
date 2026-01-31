@@ -12,7 +12,7 @@ bool can_move_pawn(BoardState *board_s, Piece selected_piece, Coords init_co, Co
     Piece(*board)[8] = board_s->board;
     int newx = dest_co.x;
     int newy = dest_co.y;
-    if (selected_piece.color == 'w')
+    if (selected_piece.color == WHITE)
     {
         // check if the pawn is moving forward
         if (newx == init_co.x + 1 && newy == init_co.y && is_empty(board[newx][newy]))
@@ -20,12 +20,12 @@ bool can_move_pawn(BoardState *board_s, Piece selected_piece, Coords init_co, Co
             return true;
         }
         // check if the pawn is moving diagonally to take a piece
-        else if (newx == init_co.x + 1 && abs(newy - init_co.y) == 1 && board[newx][newy].name != ' ')
+        else if (newx == init_co.x + 1 && abs(newy - init_co.y) == 1 && !is_empty(board[newx][newy]))
         {
             return true;
         }
         // check if the pawn is moving two squares forward
-        else if (init_co.x == 1 && newx == 3 && newy == init_co.y && board[2][newy].name == ' ' && is_empty(board[newx][newy]))
+        else if (init_co.x == 1 && newx == 3 && newy == init_co.y && is_empty(board[2][newy]) && is_empty(board[newx][newy]))
         {
             return true;
         }
@@ -41,11 +41,11 @@ bool can_move_pawn(BoardState *board_s, Piece selected_piece, Coords init_co, Co
         {
             return true;
         }
-        else if (newx == init_co.x - 1 && abs(newy - init_co.y) == 1 && board[newx][newy].name != ' ')
+        else if (newx == init_co.x - 1 && abs(newy - init_co.y) == 1 && !is_empty(board[newx][newy]))
         {
             return true;
         }
-        else if (init_co.x == 6 && newx == 4 && newy == init_co.y && board[5][newy].name == ' ' && is_empty(board[newx][newy]))
+        else if (init_co.x == 6 && newx == 4 && newy == init_co.y && is_empty(board[5][newy]) && is_empty(board[newx][newy]))
         {
             return true;
         }
@@ -68,7 +68,7 @@ bool can_move_rook(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = init_co.y + 1; i < newy; i++)
             {
-                if (board[init_co.x][i].name != ' ')
+                if (!is_empty(board[init_co.x][i]))
                 {
                     return false;
                 }
@@ -78,7 +78,7 @@ bool can_move_rook(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = init_co.y - 1; i > newy; i--)
             {
-                if (board[init_co.x][i].name != ' ')
+                if (!is_empty(board[init_co.x][i]))
                 {
                     return false;
                 }
@@ -92,7 +92,7 @@ bool can_move_rook(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = init_co.x + 1; i < newx; i++)
             {
-                if (board[i][init_co.y].name != ' ')
+                if (!is_empty(board[i][init_co.y]))
                 {
                     return false;
                 }
@@ -102,7 +102,7 @@ bool can_move_rook(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = init_co.x - 1; i > newx; i--)
             {
-                if (board[i][init_co.y].name != ' ')
+                if (!is_empty(board[i][init_co.y]))
                 {
                     return false;
                 }
@@ -141,7 +141,7 @@ bool can_move_bishop(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = 1; i < newx - init_co.x; i++)
             {
-                if (board[init_co.x + i][init_co.y + i].name != ' ')
+                if (!is_empty(board[init_co.x + i][init_co.y + i]))
                 {
                     return false;
                 }
@@ -151,7 +151,7 @@ bool can_move_bishop(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = 1; i < init_co.x - newx; i++)
             {
-                if (board[init_co.x - i][init_co.y - i].name != ' ')
+                if (!is_empty(board[init_co.x - i][init_co.y - i]))
                 {
                     return false;
                 }
@@ -165,7 +165,7 @@ bool can_move_bishop(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = 1; i < newx - init_co.x; i++)
             {
-                if (board[init_co.x + i][init_co.y - i].name != ' ')
+                if (!is_empty(board[init_co.x + i][init_co.y - i]))
                 {
                     return false;
                 }
@@ -175,7 +175,7 @@ bool can_move_bishop(BoardState *board_s, Coords init_co, Coords dest_co)
         {
             for (int i = 1; i < init_co.x - newx; i++)
             {
-                if (board[init_co.x - i][init_co.y + i].name != ' ')
+                if (!is_empty(board[init_co.x - i][init_co.y + i]))
                 {
                     return false;
                 }
@@ -209,33 +209,33 @@ bool can_move_king(BoardState *board_s, Piece selected_piece, Coords init_co, Co
 
     // castling
     // white kingside castling
-    else if (selected_piece.color == 'w' && newx == 0 && newy == 6 && board_s->white_kingside_castlable)
+    else if (selected_piece.color == WHITE && newx == 0 && newy == 6 && board_s->white_kingside_castlable)
     {
-        if (board_s->board[0][5].name == ' ' && board_s->board[0][6].name == ' ' && board_s->board[0][7].name == 'R' && board_s->board[0][7].color == 'w' && !is_attacked(board_s, (Coords){0, 5}, 'w', false) && !is_attacked(board_s, (Coords){0, 6}, 'w', false) && !is_attacked(board_s, (Coords){0, 4}, 'w', false))
+        if (is_empty(board_s->board[0][5]) && is_empty(board_s->board[0][6]) && board_s->board[0][7].name == ROOK && board_s->board[0][7].color == WHITE && !is_attacked(board_s, (Coords){0, 5}, WHITE, false) && !is_attacked(board_s, (Coords){0, 6}, WHITE, false) && !is_attacked(board_s, (Coords){0, 4}, WHITE, false))
         {
             return true;
         }
     }
     // white queenside castling
-    else if (selected_piece.color == 'w' && newx == 0 && newy == 2 && board_s->white_queenside_castlable)
+    else if (selected_piece.color == WHITE && newx == 0 && newy == 2 && board_s->white_queenside_castlable)
     {
-        if (board_s->board[0][1].name == ' ' && board_s->board[0][2].name == ' ' && board_s->board[0][3].name == ' ' && board_s->board[0][0].name == 'R' && board_s->board[0][0].color == 'w' && !is_attacked(board_s, (Coords){0, 2}, 'w', false) && !is_attacked(board_s, (Coords){0, 3}, 'w', false) && !is_attacked(board_s, (Coords){0, 4}, 'w', false))
+        if (is_empty(board_s->board[0][1]) && is_empty(board_s->board[0][2]) && is_empty(board_s->board[0][3]) && board_s->board[0][0].name == ROOK && board_s->board[0][0].color == WHITE && !is_attacked(board_s, (Coords){0, 2}, WHITE, false) && !is_attacked(board_s, (Coords){0, 3}, WHITE, false) && !is_attacked(board_s, (Coords){0, 4}, WHITE, false))
         {
             return true;
         }
     }
     // black kingside castling
-    else if (selected_piece.color == 'b' && newx == 7 && newy == 6 && board_s->black_kingside_castlable)
+    else if (selected_piece.color == BLACK && newx == 7 && newy == 6 && board_s->black_kingside_castlable)
     {
-        if (board_s->board[7][5].name == ' ' && board_s->board[7][6].name == ' ' && board_s->board[7][7].name == 'R' && board_s->board[7][7].color == 'b' && !is_attacked(board_s, (Coords){7, 5}, 'b', false) && !is_attacked(board_s, (Coords){7, 6}, 'b', false) && !is_attacked(board_s, (Coords){7, 4}, 'b', false))
+        if (is_empty(board_s->board[7][5]) && is_empty(board_s->board[7][6]) && board_s->board[7][7].name == ROOK && board_s->board[7][7].color == BLACK && !is_attacked(board_s, (Coords){7, 5}, BLACK, false) && !is_attacked(board_s, (Coords){7, 6}, BLACK, false) && !is_attacked(board_s, (Coords){7, 4}, BLACK, false))
         {
             return true;
         }
     }
     // black queenside castling
-    else if (selected_piece.color == 'b' && newx == 7 && newy == 2 && board_s->black_queenside_castlable)
+    else if (selected_piece.color == BLACK && newx == 7 && newy == 2 && board_s->black_queenside_castlable)
     {
-        if (board_s->board[7][1].name == ' ' && board_s->board[7][2].name == ' ' && board_s->board[7][3].name == ' ' && board_s->board[7][0].name == 'R' && board_s->board[7][0].color == 'b' && !is_attacked(board_s, (Coords){7, 2}, 'b', false) && !is_attacked(board_s, (Coords){7, 3}, 'b', false) && !is_attacked(board_s, (Coords){7, 4}, 'b', false))
+        if (is_empty(board_s->board[7][1]) && is_empty(board_s->board[7][2]) && is_empty(board_s->board[7][3]) && board_s->board[7][0].name == ROOK && board_s->board[7][0].color == BLACK && !is_attacked(board_s, (Coords){7, 2}, BLACK, false) && !is_attacked(board_s, (Coords){7, 3}, BLACK, false) && !is_attacked(board_s, (Coords){7, 4}, BLACK, false))
         {
             return true;
         }

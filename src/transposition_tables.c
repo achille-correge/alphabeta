@@ -15,10 +15,8 @@ uint64_t get_zobrist_hash(BoardState *board_s)
             Piece piece = board[i][j];
             if (!is_empty(piece))
             {
-                int piece_type = char_to_piece_type(piece.name);
-                int color = piece.color == 'w' ? WHITE : BLACK;
-                piece_type += color * 6;
-                hash ^= zobrist_table[piece_type * 64 + i * 8 + j];
+                int piece_index = piece.name + piece.color * 6;
+                hash ^= zobrist_table[piece_index * 64 + i * 8 + j];
             }
         }
     }
