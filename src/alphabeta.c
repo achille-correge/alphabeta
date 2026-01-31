@@ -11,6 +11,8 @@
 #include "debug_functions.h"
 #include "transposition_tables.h"
 
+static const int MVV_LVA[6] = {10, 30, 32, 50, 90, 200};  // values for pawn, knight, bishop, rook, queen, king
+
 int alpha_beta_score(PositionList *board_history, Color color, int is_max)
 {
     if ((is_max == 1 && color == WHITE) || (is_max == 0 && color == BLACK))
@@ -20,6 +22,60 @@ int alpha_beta_score(PositionList *board_history, Color color, int is_max)
     else
     {
         return -eval(board_history);
+    }
+}
+
+void score_move(BoardState *board_s, Move move, int *score, Move prio_move)
+{
+    *score = 0;
+    if (move.init_co.x == prio_move.init_co.x && move.init_co.y == prio_move.init_co.y &&
+        move.dest_co.x == prio_move.dest_co.x && move.dest_co.y == prio_move.dest_co.y &&
+        move.promotion == prio_move.promotion)
+    {
+        *score += 10000; // highest priority for the principal variation move
+    }
+    Piece captured_piece = board_s->board[move.dest_co.x][move.dest_co.y];
+    if (!is_empty(captured_piece))
+    {
+        int victim_value = MVV_LVA[captured_piece.name];
+        int attacker_value = MVV_LVA[board_s->board[move.init_co.x][move.init_co.y].name];
+        *score += (victim_value * 10 - attacker_value);
+    }
+    if (move.promotion != EMPTY_PIECE)
+    {
+        int promo_value = MVV_LVA[move.promotion];
+        *score += promo_value + 50; // bonus for promotion
+    }
+}
+
+void score_moves(BoardState *board_s, MoveList *move_list, Move prio_move)
+{
+    for (int i = 0; i < move_list->size; i++)
+    {
+        score_move(board_s, move_list->moves[i], &move_list->moves_scores[i], prio_move);
+    }
+}
+
+void swap_best_move(MoveList *move_list, int index)
+{
+    int best_index = index;
+    for (int j = index + 1; j < move_list->size; j++)
+    {
+        if (move_list->moves_scores[j] > move_list->moves_scores[best_index])
+        {
+            best_index = j;
+        }
+    }
+    if (best_index != index)
+    {
+        // swap moves
+        Move temp_move = move_list->moves[index];
+        move_list->moves[index] = move_list->moves[best_index];
+        move_list->moves[best_index] = temp_move;
+        // swap scores
+        int temp_score = move_list->moves_scores[index];
+        move_list->moves_scores[index] = move_list->moves_scores[best_index];
+        move_list->moves_scores[best_index] = temp_score;
     }
 }
 
@@ -54,7 +110,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     *nodes = *nodes + 1;
     MoveScore result;
     result.move = tested_move;
-    if (threefold_hash(board_history->board_s->hash, board_history, 1) && depth > 0)
+    if ((threefold_hash(board_history->board_s->hash, board_history, 1) || board_history->board_s->fifty_move_rule >= 100) && depth > 0)
     {
         result.score = 0;
         return result;
@@ -72,11 +128,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     MoveList move_list_val;
     MoveList *move_list = &move_list_val;
     init_possible_moves_bb(board_history->board_s, move_list);
-    if (prio_move.init_co.x != -1)
-    {
-        move_list->moves[move_list->size] = prio_move;
-        move_list->size++;
-    }
+    // Check for checks
     if (move_list->size == 0)
     {
         if (is_king_in_check(board_history->board_s))
@@ -119,11 +171,17 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             return result;
         }
     }
+    if (is_empty_move(prio_move) && !is_empty_move(tt_move))
+    {
+        prio_move = tt_move;
+    }
+    // Score moves for move ordering
+    score_moves(board_history->board_s, move_list, prio_move);
     Flag tt_flag = EXACT;
     if (is_max)
     {
         result.score = -MAX_SCORE;
-        for (int i = move_list->size - 1; i >= 0; i--)
+        for (int i = 0; i < move_list->size; i++)
         {
             time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
             if (time_taken > max_time)
@@ -135,6 +193,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
                     }
                 break;
             }
+            swap_best_move(move_list, i);
             Move new_move = move_list->moves[i];
             *new_board_s = *board_history->board_s;
             new_board_s = move_piece(new_board_s, new_move);

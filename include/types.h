@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MAX_SEARCH_PLY 128
-#define MAX_MOVES 128
+#define MAX_MOVES 512
 #define MAX_SCORE 32000
 
 typedef int Score;
@@ -77,6 +77,7 @@ typedef struct position_list
 typedef struct
 {
     Move moves[MAX_MOVES];
+    int moves_scores[MAX_MOVES];
     int size;
 } MoveList;
 
