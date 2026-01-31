@@ -109,7 +109,7 @@ void test_uci_solo()
     char buffer[MAX_MSG_LENGTH] = {0};
 
     TranspoTable global_transpo_table;
-    initialize_transposition_table(&global_transpo_table, 1 << 20);
+    initialize_transposition_table(&global_transpo_table, 1 << 24);
 
     PositionList *board_history = malloc(sizeof(PositionList));
     if (board_history == NULL)

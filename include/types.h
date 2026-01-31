@@ -8,7 +8,7 @@
 #define MAX_MOVES 128
 #define MAX_SCORE 32000
 
-typedef uint16_t Score;
+typedef int Score;
 
 typedef uint64_t Bitboard;
 
@@ -38,8 +38,8 @@ typedef struct
 
 typedef struct
 {
-    uint8_t x;
-    uint8_t y;
+    int8_t x;
+    int8_t y;
 } Coords;
 
 typedef struct

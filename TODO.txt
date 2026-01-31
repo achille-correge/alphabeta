@@ -26,12 +26,19 @@ CLEAN DU CODE (v2.1) :
 
 // Historique des changements
 
-v1.1.2 no malloc
+v2.1.3 Move ordering
+    - eh gros sayer
+    - On ajoute un score à chaque coup généré en fonction des prises
+
+v2.1.2 no malloc +tt
     - retirer les mallocs inutiles dans la boucle alphabeta (positionList et moveList)
+        -> -4.6 +/- 17.0 elo, dommage, mais je garde ça change ratio
+    - augmentation de la taille de la tt (1<<20 -> 1<<24), en réduisant la taille des ttentries (uint8_t/15_t...).
+        -> Complètement nul.
 
 v2.1.1 legaclean (+4.8 +/- 22.8 elo)
     - retirage de plein de fonctions legacy plus utilisée (logique de base pour move generation et 3fold repetirion)
-    - Pas de gain elo supposé. Sur 500 test on a +4.8 +/- 22.8 elo donc ok.
+        -> Pas de gain elo supposé. Sur 500 test on a +4.8 +/- 22.8 elo donc ok.
 
 v2.1.0 no char (+15.5 +/- 11.9 elo)
     - stocker les enums dans des uint8_t
