@@ -23,53 +23,6 @@ int alpha_beta_score(PositionList *board_history, Color color, int is_max)
     }
 }
 
-MoveList *possible_moves(BoardState *board_s, Color color)
-{
-    MoveList *move_list = malloc(sizeof(MoveList));
-    if (move_list == NULL)
-    {
-        return NULL;
-    }
-    move_list->size = 0;
-    for (int i = 0; i < 8; i++)
-    {
-        for (int j = 0; j < 8; j++)
-        {
-            Piece piece = board_s->board[i][j];
-            if (piece.color == color && !is_empty(piece))
-            {
-                for (int k = 0; k < 8; k++)
-                {
-                    for (int l = 0; l < 8; l++)
-                    {
-                        Coords init_co = {i, j};
-                        Coords dest_co = {k, l};
-                        if (can_move_heuristic(board_s, piece, init_co, dest_co, true))
-                        {
-                            Move move = {init_co, dest_co, EMPTY_PIECE};
-                            if (piece.name == PAWN && (dest_co.x == 0 || dest_co.x == 7))
-                            {
-                                PieceType promotions[] = {QUEEN, KNIGHT, BISHOP, ROOK};
-                                for (int p = 0; p < 4; p++)
-                                {
-                                    move.promotion = promotions[p];
-                                    move_list->moves[move_list->size] = move;
-                                    move_list->size++;
-                                }
-                            }
-                            else
-                            {
-                                move_list->moves[move_list->size] = move;
-                                move_list->size++;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return move_list;
-}
 
 // do an optimized version of the possible moves function using bitboards
 // board_s is the current board state
@@ -117,9 +70,6 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         }
     }
     MoveList *move_list = possible_moves_bb(board_history->board_s);
-    // TO TEST BITBOARDS:
-    // MoveList *move_list2 = possible_moves(board_history->board_s, color);
-    // verify_and_print_differences(move_list, move_list2, board_history, color);
     if (prio_move.init_co.x != -1)
     {
         move_list->moves[move_list->size] = prio_move;
@@ -127,7 +77,6 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     }
     if (move_list->size == 0)
     {
-        // if (is_check(board_history->board_s, color))
         if (is_king_in_check(board_history->board_s))
         {
             result.score = is_max ? -(MAX_SCORE - depth) : (MAX_SCORE - depth);

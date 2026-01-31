@@ -9,6 +9,7 @@
 #include "interface_uci_like.h"
 #include "debug_functions.h"
 #include "eval.h"
+#include "bitboards_moves.h"
 #define MAX_MSG_LENGTH 32000
 
 void print_board(BoardState *board_s)
@@ -72,13 +73,13 @@ void test_self_engine(double time_white, double time_black)
         color ^= 1;
         print_board(board_s);
         print_move(move);
-        if (is_check(board_s, color))
+        if (is_king_in_check(board_s))
         {
             printf("check\n");
         }
-        if (is_mate(board_s, color))
+        if (is_mate_bb(board_s))
         {
-            if (is_check(board_s, color))
+            if (is_king_in_check(board_s))
             {
                 printf("checkmate\n");
             }
@@ -88,7 +89,7 @@ void test_self_engine(double time_white, double time_black)
             }
             break;
         }
-        if (threefold_repetition(board_s, board_history, 0))
+        if (threefold_hash(board_s->hash, board_history, 0))
         {
             printf("draw by threefold repetition\n");
             break;

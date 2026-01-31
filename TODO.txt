@@ -27,6 +27,33 @@ CLEAN DU CODE (v2.1) :
 
 // Historique des changements
 
+v2.1.0 no char (+15.5 +/- 11.9 elo)
+    - stocker les enums dans des uint8_t
+    - Changer partout les types de couleurs et pièce from char to leur enum correspondante.
+
+CLEAN DU CODE (v2.1) :
+    - Changer partout les types de couleurs et pièce from char to leur enum correspondante
+    - Stocker les variables de la recherche dans du contexte pour tout factoriser exemples :
+        typedef struct {
+            PositionList *board_history;
+            Move prio_move;
+            int is_max; // On peut souvent déduire ça de la profondeur ou de la couleur
+            char color;
+        } SearchStack;
+        typedef struct {
+            TranspositionTable *tt;
+            clock_t start_clk;
+            double max_time;
+            int *nodes;
+            int max_depth;
+        } SearchContext;
+    - Pour de la perf : faire gaffe au cache. (Au pire demander à Gemini pour optimiser)
+        -> stocker les enums dans des uint8_t par exemple
+        -> stocker les moves dans des uint16_t (big taffe mais cool)
+    - Peut être? Ne pas se trimbaler l'historique partout et utiliser uniquement une table d'historique
+    - Improve l'UCI avec des options supplémentaires
+
+
 v2.0.5 TranspositionTable (+101.8 +/- 13.5 elo, draw ratio 25.3%)
     - Ajout d'une transposition table de base, +13.6 +/- 2.3 fakeelo, mais 78% draw ratio
     - Considération de nulle au bout d'une seule répétition mais -21.5 +/- 5.9 fakeelo, et 19.5% de draw ratio

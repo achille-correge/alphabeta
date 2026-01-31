@@ -22,5 +22,6 @@ MoveList *possible_moves_bb(BoardState *board_s);
 
 Bitboard get_attacks(BoardState *board_s);
 bool is_king_in_check(BoardState *board_s);
+bool is_mate_bb(BoardState *board_s);
 
 #endif

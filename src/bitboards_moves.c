@@ -429,3 +429,11 @@ MoveList *possible_moves_bb(BoardState *board_s)
     get_piece_moves(board_s, KING, is_check, move_list);
     return move_list;
 }
+
+bool is_mate_bb(BoardState *board_s)
+{
+    MoveList *move_list = possible_moves_bb(board_s);
+    bool result = (move_list->size == 0);
+    free(move_list);
+    return result;
+}

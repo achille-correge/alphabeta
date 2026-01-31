@@ -1,6 +1,7 @@
 #include "eval.h"
 #include "types.h"
 #include "chess_logic.h"
+#include "bitboards_moves.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
@@ -286,60 +287,6 @@ int pawn_structure_eval(BoardState *board_s)
         black_pawns &= black_pawns - 1;
     }
     return score;
-}
-
-
-bool check_for_mates(BoardState *board_s, Color color, int *result)
-{
-    bool white_mate = is_mate(board_s, WHITE);
-    bool black_mate = is_mate(board_s, BLACK);
-    if (white_mate && is_check(board_s, WHITE))
-    {
-        *result = -MAX_SCORE;
-    }
-    else if (black_mate && is_check(board_s, BLACK))
-    {
-        *result = MAX_SCORE;
-    }
-    else if (white_mate || black_mate)
-    {
-        *result = 0;
-    }
-    else
-    {
-        return false;
-    }
-    return true;
-}
-
-bool eval_game_ended(PositionList *board_history, int *result)
-{
-    BoardState *board_s = board_history->board_s;
-
-    // check for mates, not necessary in the way we call this function
-    // if (check_for_mates(board_s, 'w', result) || check_for_mates(board_s, 'b', result))
-    // {
-    //     return true;
-    // }
-    // else
-    if (threefold_repetition(board_s, board_history, 0))
-    {
-        // printf("threefold repetition\n");
-        *result = -100;
-    }
-    else if (board_s->fifty_move_rule >= 100)
-    {
-        *result = -50;
-    }
-    else if (insufficient_material(board_s))
-    {
-        *result = 0;
-    }
-    else
-    {
-        return false;
-    }
-    return true;
 }
 
 // evaluate the board state for the white player
