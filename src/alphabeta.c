@@ -69,7 +69,9 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             return result;
         }
     }
-    MoveList *move_list = possible_moves_bb(board_history->board_s);
+    MoveList move_list_val;
+    MoveList *move_list = &move_list_val;
+    init_possible_moves_bb(board_history->board_s, move_list);
     if (prio_move.init_co.x != -1)
     {
         move_list->moves[move_list->size] = prio_move;
@@ -80,22 +82,15 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         if (is_king_in_check(board_history->board_s))
         {
             result.score = is_max ? -(MAX_SCORE - depth) : (MAX_SCORE - depth);
-            free(move_list);
             return result;
         }
         result.score = 0;
-        free(move_list);
         return result;
     }
-    BoardState *new_board_s = malloc(sizeof(BoardState));
-    PositionList *new_board_history = malloc(sizeof(PositionList));
-    if (new_board_s == NULL || new_board_history == NULL)
-    {
-        result.score = 0;
-        result.move = empty_move();
-        free(move_list);
-        return result;
-    }
+    BoardState new_board_s_val;
+    PositionList new_board_history_val;
+    BoardState *new_board_s = &new_board_s_val;
+    PositionList *new_board_history = &new_board_history_val;
     new_board_history->tail = board_history;
     Color next_color = color ^ 1;
     double time_taken;
@@ -121,9 +116,6 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             {
                 result.score += depth;
             }
-            free(move_list);
-            free(new_board_s);
-            free(new_board_history);
             return result;
         }
     }
@@ -201,9 +193,6 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             }
         }
     }
-    free(move_list);
-    free(new_board_s);
-    free(new_board_history);
     store_transposition_table_entry(table, board_history->board_s->hash, result.score, depth_to_go, result.move, tt_flag);
     return result;
 }

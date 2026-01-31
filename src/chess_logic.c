@@ -9,7 +9,7 @@
 
 const int PIECES_PHASE_VALUES[6] = {0, 1, 1, 2, 4, 0};
 
-static Piece empty_piece()
+Piece empty_piece()
 {
     Piece piece;
     piece.name = EMPTY_PIECE;
@@ -17,7 +17,7 @@ static Piece empty_piece()
     return piece;
 }
 
-static Coords empty_coords()
+Coords empty_coords()
 {
     Coords coords;
     coords.x = -1;
@@ -39,7 +39,7 @@ bool is_empty(Piece piece)
     return piece.name == EMPTY_PIECE;
 }
 
-static bool is_empty_coords(Coords coords)
+bool is_empty_coords(Coords coords)
 {
     return coords.x == -1 && coords.y == -1;
 }
@@ -189,7 +189,7 @@ bool insufficient_material(BoardState *board_s)
     return false;
 }
 
-static Piece get_piece(Piece board[8][8], Coords coords)
+Piece get_piece(Piece board[8][8], Coords coords)
 {
     if (is_empty_coords(coords))
     {

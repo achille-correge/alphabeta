@@ -412,14 +412,9 @@ Bitboard get_piece_moves(BoardState *board_s, PieceType piece_type, bool is_chec
     return legal_moves;
 }
 
-MoveList *possible_moves_bb(BoardState *board_s)
+void init_possible_moves_bb(BoardState *board_s, MoveList *move_list)
 {
     bool is_check = is_king_in_check(board_s);
-    MoveList *move_list = malloc(sizeof(MoveList));
-    if (move_list == NULL)
-    {
-        return NULL;
-    }
     move_list->size = 0;
     get_piece_moves(board_s, PAWN, is_check, move_list);
     get_piece_moves(board_s, KNIGHT, is_check, move_list);
@@ -427,13 +422,13 @@ MoveList *possible_moves_bb(BoardState *board_s)
     get_piece_moves(board_s, ROOK, is_check, move_list);
     get_piece_moves(board_s, QUEEN, is_check, move_list);
     get_piece_moves(board_s, KING, is_check, move_list);
-    return move_list;
 }
 
 bool is_mate_bb(BoardState *board_s)
 {
-    MoveList *move_list = possible_moves_bb(board_s);
+    MoveList move_list_val;
+    MoveList *move_list = &move_list_val;
+    init_possible_moves_bb(board_s, move_list);
     bool result = (move_list->size == 0);
-    free(move_list);
     return result;
 }

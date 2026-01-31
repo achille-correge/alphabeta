@@ -18,7 +18,7 @@ Bitboard init_black_queens();
 Bitboard init_white_kings();
 Bitboard init_black_kings();
 
-MoveList *possible_moves_bb(BoardState *board_s);
+void init_possible_moves_bb(BoardState *board_s, MoveList *move_list);
 
 Bitboard get_attacks(BoardState *board_s);
 bool is_king_in_check(BoardState *board_s);

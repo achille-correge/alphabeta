@@ -6,9 +6,9 @@
 
 #define MAX_SEARCH_PLY 128
 #define MAX_MOVES 128
-#define MAX_SCORE 100050
+#define MAX_SCORE 32000
 
-typedef int Score;
+typedef uint16_t Score;
 
 typedef uint64_t Bitboard;
 
@@ -38,8 +38,8 @@ typedef struct
 
 typedef struct
 {
-    int x;
-    int y;
+    uint8_t x;
+    uint8_t y;
 } Coords;
 
 typedef struct
@@ -91,9 +91,9 @@ typedef struct
 {
     uint64_t hash;
     Score score;
-    int depth;
-    Move best_move;
+    uint8_t depth;
     Flag flag;
+    Move best_move;
 } TranspoTableEntry;
 
 typedef struct

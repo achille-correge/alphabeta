@@ -2,7 +2,6 @@ MOVE_ORDERING (v2.2)
 
 
 CLEAN DU CODE (v2.1) :
-    - Changer partout les types de couleurs et pièce from char to leur enum correspondante
     - Stocker les variables de la recherche dans du contexte pour tout factoriser exemples :
         typedef struct {
             PositionList *board_history;
@@ -27,11 +26,18 @@ CLEAN DU CODE (v2.1) :
 
 // Historique des changements
 
+v1.1.2 no malloc
+    - retirer les mallocs inutiles dans la boucle alphabeta (positionList et moveList)
+
+v2.1.1 legaclean (+4.8 +/- 22.8 elo)
+    - retirage de plein de fonctions legacy plus utilisée (logique de base pour move generation et 3fold repetirion)
+    - Pas de gain elo supposé. Sur 500 test on a +4.8 +/- 22.8 elo donc ok.
+
 v2.1.0 no char (+15.5 +/- 11.9 elo)
     - stocker les enums dans des uint8_t
     - Changer partout les types de couleurs et pièce from char to leur enum correspondante.
 
-CLEAN DU CODE (v2.1) :
+TODO CLEAN DU CODE (v2.1) :
     - Changer partout les types de couleurs et pièce from char to leur enum correspondante
     - Stocker les variables de la recherche dans du contexte pour tout factoriser exemples :
         typedef struct {

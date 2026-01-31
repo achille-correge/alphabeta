@@ -15,7 +15,7 @@ OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Define the output directory and executable name
 BUILD_DIR = builds
-EXECUTABLE = $(BUILD_DIR)/felabot_2.1.1-delete_legacy
+EXECUTABLE = $(BUILD_DIR)/felabot_2.1.2-remove_mallocs
 
 # Define the default target
 all: $(EXECUTABLE)
