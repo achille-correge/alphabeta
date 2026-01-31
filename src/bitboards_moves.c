@@ -236,7 +236,7 @@ Bitboard get_king_pseudo_moves(Bitboard kings, Bitboard ally, Bitboard blockers,
 Bitboard get_attacks(BoardState *board_s)
 {
     Color color = board_s->player;
-    Color enemy_color = color == WHITE ? BLACK : WHITE;
+    Color enemy_color = color ^ 1;
     Bitboard ally = board_s->color_bb[color];
     Bitboard enemy = board_s->color_bb[enemy_color];
     Bitboard blockers = ally | enemy;
@@ -276,7 +276,7 @@ Bitboard get_new_attacks(Bitboard all_pieces_bb[2][6], Bitboard enemy, Bitboard 
 bool is_king_left_in_check(Bitboard all_pieces_bb[2][6], Bitboard enemy, Bitboard blockers, Color color)
 {
     Bitboard king = all_pieces_bb[color][KING];
-    Bitboard attacks = get_new_attacks(all_pieces_bb, enemy, blockers, color == WHITE ? BLACK : WHITE);
+    Bitboard attacks = get_new_attacks(all_pieces_bb, enemy, blockers, color ^ 1);
     return (attacks & king) != 0;
 }
 
@@ -307,7 +307,7 @@ Bitboard get_single_piece_legal_moves(Bitboard piece, Bitboard piece_moves, Boar
     int piece_square = __builtin_ctzll(piece);
     Bitboard legal_moves = 0;
     Color color = board_s->player;
-    Color enemy_color = board_s->player == WHITE ? BLACK : WHITE;
+    Color enemy_color = color ^ 1;
     Bitboard ally = board_s->color_bb[color];
     Bitboard enemy = board_s->color_bb[enemy_color];
     Bitboard move = 0;

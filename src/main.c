@@ -68,7 +68,8 @@ void test_self_engine(double time_white, double time_black)
         board_s = move_piece(board_s, move);
         board_history = save_position(board_s, board_history);
 
-        color = color == WHITE ? BLACK : WHITE;
+        // change color
+        color ^= 1;
         print_board(board_s);
         print_move(move);
         if (is_check(board_s, color))

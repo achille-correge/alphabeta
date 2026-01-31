@@ -148,7 +148,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         return result;
     }
     new_board_history->tail = board_history;
-    Color next_color = color == WHITE ? BLACK : WHITE;
+    Color next_color = color ^ 1;
     double time_taken;
     // Check transposition table
     int depth_to_go = max_depth - depth;

@@ -217,8 +217,8 @@ int one_pawn_structure_eval(BoardState *board_s, int x, int y, Color color)
 {
     int score = 0;
     Bitboard pawns = board_s->all_pieces_bb[color][PAWN];
-    Bitboard opponent_pawns = board_s->all_pieces_bb[1 - color][PAWN];
-    Bitboard in_front_mask = under_over_ranks[color == WHITE ? 0 : 1][x];
+    Bitboard opponent_pawns = board_s->all_pieces_bb[color ^ 1][PAWN];
+    Bitboard in_front_mask = under_over_ranks[color ^ 1][x];
     Bitboard left_file = FILE_H << (7 - y + 1);
     Bitboard pwn_file = FILE_H << (7-y);
     Bitboard right_file = FILE_H << (7-y-1);

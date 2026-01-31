@@ -38,7 +38,7 @@ Move empty_move()
 
 bool is_empty(Piece piece)
 {
-    return piece.name == EMPTY_PIECE && piece.color == EMPTY_COLOR;
+    return piece.name == EMPTY_PIECE;
 }
 
 bool is_empty_coords(Coords coords)
@@ -307,10 +307,9 @@ BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest
     // fprintf(stderr, "dest_piece: %c, %c\n", dest_piece.name, dest_piece.color);
     if ((move_piece.color == WHITE && new_coords.x == 7) || (move_piece.color == BLACK && new_coords.x == 0))
     {
-        Color color = move_piece.color == WHITE ? WHITE : BLACK;
         board_s->board[new_coords.x][new_coords.y].name = sel_move.promotion;
-        board_s->all_pieces_bb[color][sel_move.promotion] |= 1ULL << coords_to_square(new_coords);
-        board_s->all_pieces_bb[color][PAWN] &= ~(1ULL << coords_to_square(new_coords));
+        board_s->all_pieces_bb[move_piece.color][sel_move.promotion] |= 1ULL << coords_to_square(new_coords);
+        board_s->all_pieces_bb[move_piece.color][PAWN] &= ~(1ULL << coords_to_square(new_coords));
         board_s->phase += PIECES_PHASE_VALUES[sel_move.promotion];
     }
     if (move_piece.color == WHITE && new_coords.x - init_coords.x == 2)
@@ -343,7 +342,6 @@ BoardState *move_pawn_handling(BoardState *board_s, Piece move_piece, Piece dest
 
 BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coords, Coords new_coords)
 {
-    Color color = piece.color == WHITE ? WHITE : BLACK;
     if (piece.color == WHITE)
     {
         board_s->white_kingside_castlable = false;
@@ -363,24 +361,24 @@ BoardState *move_king_handling(BoardState *board_s, Piece piece, Coords init_coo
         board_s->board[new_coords.x][5].name = ROOK;
         board_s->board[new_coords.x][5].color = piece.color;
         board_s->board[new_coords.x][7] = empty_piece();
-        board_s->color_bb[color] ^= 1UL << (8 * new_coords.x);
-        board_s->color_bb[color] |= 1UL << (8 * new_coords.x + 2);
-        board_s->all_pieces_bb[color][ROOK] ^= 1UL << (8 * new_coords.x);
-        board_s->all_pieces_bb[color][ROOK] |= 1UL << (8 * new_coords.x + 2);
-        board_s->hash ^= zobrist_table[(ROOK+6*color) * 64 + 8 * new_coords.x + 7];     // remove rook from original square
-        board_s->hash ^= zobrist_table[(ROOK+6*color) * 64 + 8 * new_coords.x + 5];     // add rook to new square
+        board_s->color_bb[piece.color] ^= 1UL << (8 * new_coords.x);
+        board_s->color_bb[piece.color] |= 1UL << (8 * new_coords.x + 2);
+        board_s->all_pieces_bb[piece.color][ROOK] ^= 1UL << (8 * new_coords.x);
+        board_s->all_pieces_bb[piece.color][ROOK] |= 1UL << (8 * new_coords.x + 2);
+        board_s->hash ^= zobrist_table[(ROOK+6*piece.color) * 64 + 8 * new_coords.x + 7];     // remove rook from original square
+        board_s->hash ^= zobrist_table[(ROOK+6*piece.color) * 64 + 8 * new_coords.x + 5];     // add rook to new square
     }
     else if (new_coords.y == 2 && init_coords.y == 4)
     {
         board_s->board[new_coords.x][3].name = ROOK;
         board_s->board[new_coords.x][3].color = piece.color;
         board_s->board[new_coords.x][0] = empty_piece();
-        board_s->color_bb[color] ^= 1UL << (8 * new_coords.x + 7);
-        board_s->color_bb[color] |= 1UL << (8 * new_coords.x + 4);
-        board_s->all_pieces_bb[color][ROOK] ^= 1UL << (8 * new_coords.x + 7);
-        board_s->all_pieces_bb[color][ROOK] |= 1UL << (8 * new_coords.x + 4);
-        board_s->hash ^= zobrist_table[(ROOK+6*color) * 64 + 8 * new_coords.x + 0];     // remove rook from original square
-        board_s->hash ^= zobrist_table[(ROOK+6*color) * 64 + 8 * new_coords.x + 3];     // add rook to new square
+        board_s->color_bb[piece.color] ^= 1UL << (8 * new_coords.x + 7);
+        board_s->color_bb[piece.color] |= 1UL << (8 * new_coords.x + 4);
+        board_s->all_pieces_bb[piece.color][ROOK] ^= 1UL << (8 * new_coords.x + 7);
+        board_s->all_pieces_bb[piece.color][ROOK] |= 1UL << (8 * new_coords.x + 4);
+        board_s->hash ^= zobrist_table[(ROOK+6*piece.color) * 64 + 8 * new_coords.x + 0];     // remove rook from original square
+        board_s->hash ^= zobrist_table[(ROOK+6*piece.color) * 64 + 8 * new_coords.x + 3];     // add rook to new square
     }
     return board_s;
 }
@@ -417,7 +415,7 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
     Piece move_piece = get_piece(board_s->board, init_coords);
     Piece dest_piece = get_piece(board_s->board, new_coords);
     Color color = move_piece.color;
-    Color enemy_color = color == WHITE ? BLACK : WHITE;
+    Color enemy_color = color ^ 1;
     if (is_empty(move_piece))
     {
         return board_s;
@@ -446,7 +444,7 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
     board_s->all_pieces_bb[color][move_piece.name] ^= 1ULL << coords_to_square(init_coords);
     board_s->hash ^= zobrist_table[(move_piece.name + 6 * color) * 64 + 8*init_coords.x + init_coords.y]; // remove the moved piece from the hash
     // remove the piece from the enemy if it exists
-    if (dest_piece.color != EMPTY_COLOR)
+    if (!is_empty(dest_piece))
     {
         board_s->color_bb[enemy_color] ^= 1ULL << coords_to_square(new_coords);
         board_s->all_pieces_bb[enemy_color][dest_piece.name] ^= 1ULL << coords_to_square(new_coords);
@@ -476,7 +474,7 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
         board_s = move_rook_handling(board_s, move_piece, init_coords, new_coords);
     }
     // switch player
-    board_s->player = board_s->player == WHITE ? BLACK : WHITE;
+    board_s->player = 1 - board_s->player;
     board_s->hash ^= zobrist_table[780]; // switch player in hash, 780 = side to move
     return board_s;
 }
