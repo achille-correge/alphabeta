@@ -31,7 +31,7 @@ TranspositionTable (v2.0.5)
 
 // Historique des changements
 
-v2.0.5 TranspositionTable
+v2.0.5 TranspositionTable (+101.8 +/- 13.5 elo, draw ratio 25.3%)
     - Ajout d'une transposition table de base, +13.6 +/- 2.3 fakeelo, mais 78% draw ratio
     - Considération de nulle au bout d'une seule répétition mais -21.5 +/- 5.9 fakeelo, et 19.5% de draw ratio
     - Avec une éval à -200 sur la 3fold repetition : 110.5 +/- 2.9 fakeelo, 61.3% de draw ratio
