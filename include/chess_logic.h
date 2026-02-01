@@ -14,6 +14,7 @@ Move empty_move();
 bool is_empty(Piece piece);
 bool is_empty_coords(Coords coords);
 bool is_empty_move(Move move);
+bool moves_are_equal(Move move1, Move move2);
 int coords_to_square(Coords co);
 Coords square_to_coords(int square);
 PieceType char_to_piece_type(char c);

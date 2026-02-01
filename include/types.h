@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define MAX_SEARCH_PLY 128
+#define MAX_SEARCH_PLY 64
 #define MAX_MOVES 512
 #define MAX_SCORE 32000
 

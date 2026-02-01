@@ -190,7 +190,7 @@ Bitboard init_white_kings()
 
 Bitboard init_black_kings()
 {
-    return 0x800000000000000;
+    return 0x0800000000000000;
 }
 
 Bitboard get_king_pseudo_moves_nocastle(Bitboard kings, Bitboard ally)
@@ -215,8 +215,8 @@ Bitboard get_king_pseudo_moves(Bitboard kings, Bitboard ally, Bitboard blockers,
 
     if (kingside_castlable)
     {
-        Bitboard kingside_block_mask = color == WHITE ? 6 : 0x600000000000000;
-        Bitboard kingside_threatened_mask = color == WHITE ? 0xe : 0xe00000000000000;
+        Bitboard kingside_block_mask = color == WHITE ? 6 : 0x0600000000000000;
+        Bitboard kingside_threatened_mask = color == WHITE ? 0xe : 0x0e00000000000000;
         if ((blockers & kingside_block_mask) == 0 && (threatened_squares & kingside_threatened_mask) == 0)
             king_moves |= (kings >> 2);
     }

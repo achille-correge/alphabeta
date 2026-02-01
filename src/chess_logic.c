@@ -41,12 +41,31 @@ bool is_empty(Piece piece)
 
 bool is_empty_coords(Coords coords)
 {
+    return coords.x == -1;
+}
+
+bool is_empty_coords_true(Coords coords)
+{
     return coords.x == -1 && coords.y == -1;
 }
 
 bool is_empty_move(Move move)
 {
-    return is_empty_coords(move.init_co) && is_empty_coords(move.dest_co) && move.promotion == EMPTY_PIECE;
+    return move.init_co.x == -1;
+}
+
+bool is_empty_move_true(Move move)
+{
+    return is_empty_coords_true(move.init_co) && is_empty_coords_true(move.dest_co) && move.promotion == EMPTY_PIECE;
+}
+
+bool moves_are_equal(Move move1, Move move2)
+{
+    return (move1.init_co.x == move2.init_co.x &&
+            move1.init_co.y == move2.init_co.y &&
+            move1.dest_co.x == move2.dest_co.x &&
+            move1.dest_co.y == move2.dest_co.y &&
+            move1.promotion == move2.promotion);
 }
 
 int coords_to_square(Coords co)

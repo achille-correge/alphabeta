@@ -11,7 +11,7 @@
 #include "debug_functions.h"
 #include "transposition_tables.h"
 
-static const int MVV_LVA[6] = {10, 30, 32, 50, 90, 200};  // values for pawn, knight, bishop, rook, queen, king
+static const int MVV_LVA[6] = {10, 30, 32, 50, 90, 95};  // values for pawn, knight, bishop, rook, queen, king
 
 int alpha_beta_score(PositionList *board_history, Color color, int is_max)
 {
@@ -25,34 +25,60 @@ int alpha_beta_score(PositionList *board_history, Color color, int is_max)
     }
 }
 
-void score_move(BoardState *board_s, Move move, int *score, Move prio_move)
+void insert_killer_move(Move killer_moves[2][MAX_SEARCH_PLY], Move move, int depth)
 {
-    *score = 0;
-    if (move.init_co.x == prio_move.init_co.x && move.init_co.y == prio_move.init_co.y &&
-        move.dest_co.x == prio_move.dest_co.x && move.dest_co.y == prio_move.dest_co.y &&
-        move.promotion == prio_move.promotion)
-    {
-        *score += 10000; // highest priority for the principal variation move
+    // 1. Si le coup est déjà le premier killer, on ne fait rien
+    if (moves_are_equal(killer_moves[0][depth], move)) {
+        return;
     }
+
+    // 2. Décalage (le premier devient le second)
+    killer_moves[1][depth] = killer_moves[0][depth];
+    killer_moves[0][depth] = move;
+}
+
+void score_move(BoardState *board_s, Move move, int *score, Move prio_move, int depth, Move killer_moves[2][MAX_SEARCH_PLY])
+{
+    // scale : 2M for PV move, 1M for captures and Q promo, 500k for killer moves, rest for quiet moves
+    // PV move has highest priority
+    *score = 0;
+    if (moves_are_equal(prio_move, move))
+    {
+        *score += 2000000; // highest priority for the principal variation move
+    }
+    // CAPTURES and PROMOTIONS next
     Piece captured_piece = board_s->board[move.dest_co.x][move.dest_co.y];
     if (!is_empty(captured_piece))
     {
         int victim_value = MVV_LVA[captured_piece.name];
         int attacker_value = MVV_LVA[board_s->board[move.init_co.x][move.init_co.y].name];
-        *score += (victim_value * 10 - attacker_value);
+        *score += (victim_value * 10 - attacker_value) + 1000000; // MVV-LVA scoring for captures
     }
     if (move.promotion != EMPTY_PIECE)
     {
-        int promo_value = MVV_LVA[move.promotion];
-        *score += promo_value + 50; // bonus for promotion
+        if (move.promotion == QUEEN)
+        {
+            *score+= 1000000; // extra bonus for promoting to queen
+        }
+        *score += MVV_LVA[move.promotion]; // bonus for promotion
     }
+    // KILLER MOVES
+    if (moves_are_equal(killer_moves[0][depth], move))
+    {
+        *score += 500000;
+    }
+    else if (moves_are_equal(killer_moves[1][depth], move))
+    {
+        *score += 400000;
+    }
+    // TO ADD : HISTORY HEURISTIC, ETC.
 }
 
-void score_moves(BoardState *board_s, MoveList *move_list, Move prio_move)
+void score_moves(BoardState *board_s, MoveList *move_list, Move prio_move, int depth, Move killer_moves[2][MAX_SEARCH_PLY])
 {
     for (int i = 0; i < move_list->size; i++)
     {
-        score_move(board_s, move_list->moves[i], &move_list->moves_scores[i], prio_move);
+        score_move(board_s, move_list->moves[i], &move_list->moves_scores[i], prio_move, depth, killer_moves);
     }
 }
 
@@ -105,7 +131,7 @@ typedef struct
 // nodes is the number of nodes checked
 // return the score of the best move
 
-MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, int is_min, int *nodes, clock_t start_clk, double max_time, Move prio_move)
+MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, int is_min, int *nodes, clock_t start_clk, double max_time, Move prio_move, Move killer_moves[2][MAX_SEARCH_PLY])
 {
     *nodes = *nodes + 1;
     MoveScore result;
@@ -176,7 +202,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         prio_move = tt_move;
     }
     // Score moves for move ordering
-    score_moves(board_history->board_s, move_list, prio_move);
+    score_moves(board_history->board_s, move_list, prio_move, depth, killer_moves);
     Flag tt_flag = EXACT;
     if (is_max)
     {
@@ -199,7 +225,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             new_board_s = move_piece(new_board_s, new_move);
             new_board_history->board_s = new_board_s;
             int new_score;
-            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 0, 1, nodes, start_clk, max_time, empty_move());
+            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 0, 1, nodes, start_clk, max_time, empty_move(), killer_moves);
             new_score = new_move_score.score;
             if (new_score > result.score)
             {
@@ -213,6 +239,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             if (alpha >= beta)
             {
                 tt_flag = UPPERBOUND;
+                insert_killer_move(killer_moves, new_move, depth);
                 break;
             }
         }
@@ -220,7 +247,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     else
     {
         result.score = MAX_SCORE;
-        for (int i = move_list->size - 1; i >= 0; i--)
+        for (int i = 0; i < move_list->size; i++)
         {
             time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
             if (time_taken > max_time)
@@ -229,12 +256,13 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
                 result.score = -MAX_SCORE;
                 break;
             }
+            swap_best_move(move_list, i);
             Move new_move = move_list->moves[i];
             *new_board_s = *board_history->board_s;
             new_board_s = move_piece(new_board_s, new_move);
             new_board_history->board_s = new_board_s;
             int new_score;
-            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 1, 0, nodes, start_clk, max_time, empty_move());
+            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 1, 0, nodes, start_clk, max_time, empty_move(), killer_moves);
             new_score = new_move_score.score;
             if (new_score < result.score)
             {
@@ -248,6 +276,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             if (alpha >= beta)
             {
                 tt_flag = LOWERBOUND;
+                insert_killer_move(killer_moves, new_move, depth);
                 break;
             }
         }
@@ -272,11 +301,19 @@ Move iterative_deepening(TranspoTable *tt, PositionList *board_history, Color co
     int nodes = 0;
     int score;
     double nps;
+    Move killer_moves[2][MAX_SEARCH_PLY]; // initialize killer moves
+    for (int k = 0; k < 2; k++)
+    {
+        for (int d = 0; d < MAX_SEARCH_PLY; d++)
+        {
+            killer_moves[k][d] = empty_move();
+        }
+    }
     for (int i = 1; i <= max_depth; i++)
     {
         nodes = 0;
         start_iter = clock();
-        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), 1, 0, &nodes, glob_start, max_time, move);
+        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), 1, 0, &nodes, glob_start, max_time, move, killer_moves);
         end_iter = clock();
         cpu_time_used = ((double)(end_iter - start_iter)) / CLOCKS_PER_SEC;
         nps = nodes / cpu_time_used;
