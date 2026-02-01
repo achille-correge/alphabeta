@@ -10,100 +10,7 @@
 #include "bitboards_moves.h"
 #include "debug_functions.h"
 #include "transposition_tables.h"
-
-static const int MVV_LVA[6] = {10, 30, 32, 50, 90, 95};  // values for pawn, knight, bishop, rook, queen, king
-
-int alpha_beta_score(PositionList *board_history, Color color, int is_max)
-{
-    if ((is_max == 1 && color == WHITE) || (is_max == 0 && color == BLACK))
-    {
-        return eval(board_history);
-    }
-    else
-    {
-        return -eval(board_history);
-    }
-}
-
-void insert_killer_move(Move killer_moves[2][MAX_SEARCH_PLY], Move move, int depth)
-{
-    // 1. Si le coup est déjà le premier killer, on ne fait rien
-    if (moves_are_equal(killer_moves[0][depth], move)) {
-        return;
-    }
-
-    // 2. Décalage (le premier devient le second)
-    killer_moves[1][depth] = killer_moves[0][depth];
-    killer_moves[0][depth] = move;
-}
-
-void score_move(BoardState *board_s, Move move, int *score, Move prio_move, int depth, Move killer_moves[2][MAX_SEARCH_PLY])
-{
-    // scale : 2M for PV move, 1M for captures and Q promo, 500k for killer moves, rest for quiet moves
-    // PV move has highest priority
-    *score = 0;
-    if (moves_are_equal(prio_move, move))
-    {
-        *score += 2000000; // highest priority for the principal variation move
-    }
-    // CAPTURES and PROMOTIONS next
-    Piece captured_piece = board_s->board[move.dest_co.x][move.dest_co.y];
-    if (!is_empty(captured_piece))
-    {
-        int victim_value = MVV_LVA[captured_piece.name];
-        int attacker_value = MVV_LVA[board_s->board[move.init_co.x][move.init_co.y].name];
-        *score += (victim_value * 10 - attacker_value) + 1000000; // MVV-LVA scoring for captures
-    }
-    if (move.promotion != EMPTY_PIECE)
-    {
-        if (move.promotion == QUEEN)
-        {
-            *score+= 1000000; // extra bonus for promoting to queen
-        }
-        *score += MVV_LVA[move.promotion]; // bonus for promotion
-    }
-    // KILLER MOVES
-    if (moves_are_equal(killer_moves[0][depth], move))
-    {
-        *score += 500000;
-    }
-    else if (moves_are_equal(killer_moves[1][depth], move))
-    {
-        *score += 400000;
-    }
-    // TO ADD : HISTORY HEURISTIC, ETC.
-}
-
-void score_moves(BoardState *board_s, MoveList *move_list, Move prio_move, int depth, Move killer_moves[2][MAX_SEARCH_PLY])
-{
-    for (int i = 0; i < move_list->size; i++)
-    {
-        score_move(board_s, move_list->moves[i], &move_list->moves_scores[i], prio_move, depth, killer_moves);
-    }
-}
-
-void swap_best_move(MoveList *move_list, int index)
-{
-    int best_index = index;
-    for (int j = index + 1; j < move_list->size; j++)
-    {
-        if (move_list->moves_scores[j] > move_list->moves_scores[best_index])
-        {
-            best_index = j;
-        }
-    }
-    if (best_index != index)
-    {
-        // swap moves
-        Move temp_move = move_list->moves[index];
-        move_list->moves[index] = move_list->moves[best_index];
-        move_list->moves[best_index] = temp_move;
-        // swap scores
-        int temp_score = move_list->moves_scores[index];
-        move_list->moves_scores[index] = move_list->moves_scores[best_index];
-        move_list->moves_scores[best_index] = temp_score;
-    }
-}
+#include "alphabeta_auxiliary.h"
 
 
 // do an optimized version of the possible moves function using bitboards
@@ -146,7 +53,8 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         // depth extension if in check (+14.0 +/- 3.4 elo)
         if (!(is_king_in_check(board_history->board_s) && depth-max_depth < 8))
         {
-            result.score = alpha_beta_score(board_history, color, is_max);
+            // quiescence search
+            result.score = quiesce(alpha, beta, depth, table, board_history, color, is_max, nodes);
             // store_transposition_table_entry(table, board_history->board_s->hash, result.score, 0, empty_move(), EXACT);
             return result;
         }

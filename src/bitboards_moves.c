@@ -412,6 +412,52 @@ Bitboard get_piece_moves(BoardState *board_s, PieceType piece_type, bool is_chec
     return legal_moves;
 }
 
+Bitboard get_piece_capture_moves(BoardState *board_s, PieceType piece_type, bool is_check, MoveList *capture_move_list)
+{
+    Bitboard pieces = board_s->all_pieces_bb[board_s->player][piece_type];
+    Bitboard legal_moves = 0;
+    while (pieces)
+    {
+        int piece_square = __builtin_ctzll(pieces);
+        pieces &= pieces - 1;
+        Bitboard piece = 1ULL << piece_square;
+        Bitboard piece_moves;
+        switch (piece_type)
+        {
+        case PAWN:
+            if (board_s->player == WHITE)
+                piece_moves = get_white_pawn_pseudo_moves(piece, ~board_s->color_bb[WHITE] & ~board_s->color_bb[BLACK], board_s->color_bb[BLACK], board_s->black_pawn_passant);
+            else
+                piece_moves = get_black_pawn_pseudo_moves(piece, ~board_s->color_bb[WHITE] & ~board_s->color_bb[BLACK], board_s->color_bb[WHITE], board_s->white_pawn_passant);
+            break;
+        case KNIGHT:
+            piece_moves = get_knight_pseudo_moves(piece, board_s->color_bb[board_s->player]);
+            break;
+        case BISHOP:
+            piece_moves = get_bishop_pseudo_moves(piece, board_s->color_bb[board_s->player], board_s->color_bb[WHITE] | board_s->color_bb[BLACK]);
+            break;
+        case ROOK:
+            piece_moves = get_rook_pseudo_moves(piece, board_s->color_bb[board_s->player], board_s->color_bb[WHITE] | board_s->color_bb[BLACK]);
+            break;
+        case QUEEN:
+            piece_moves = get_queen_pseudo_moves(piece, board_s->color_bb[board_s->player], board_s->color_bb[WHITE] | board_s->color_bb[BLACK]);
+            break;
+        case KING:
+            if (board_s->player == WHITE)
+                piece_moves = get_king_pseudo_moves(piece, board_s->color_bb[WHITE], board_s->color_bb[WHITE] | board_s->color_bb[BLACK], get_attacks(board_s), WHITE, board_s->white_kingside_castlable, board_s->white_queenside_castlable);
+            else
+                piece_moves = get_king_pseudo_moves(piece, board_s->color_bb[BLACK], board_s->color_bb[WHITE] | board_s->color_bb[BLACK], get_attacks(board_s), BLACK, board_s->black_kingside_castlable, board_s->black_queenside_castlable);
+            break;
+        default:
+            piece_moves = 0;
+            break;
+        }
+        piece_moves &= board_s->color_bb[board_s->player ^ 1];
+        legal_moves |= get_single_piece_legal_moves(piece, piece_moves, board_s, piece_type, is_check, capture_move_list);
+    }
+    return legal_moves;
+}
+
 void init_possible_moves_bb(BoardState *board_s, MoveList *move_list)
 {
     bool is_check = is_king_in_check(board_s);
@@ -422,6 +468,17 @@ void init_possible_moves_bb(BoardState *board_s, MoveList *move_list)
     get_piece_moves(board_s, ROOK, is_check, move_list);
     get_piece_moves(board_s, QUEEN, is_check, move_list);
     get_piece_moves(board_s, KING, is_check, move_list);
+}
+
+void init_possible_capture_moves_bb(BoardState *board_s, MoveList *move_capture_list)
+{
+    bool is_check = is_king_in_check(board_s);
+    move_capture_list->size = 0;
+    get_piece_capture_moves(board_s, PAWN, is_check, move_capture_list);
+    get_piece_capture_moves(board_s, KNIGHT, is_check, move_capture_list);
+    get_piece_capture_moves(board_s, BISHOP, is_check, move_capture_list);
+    get_piece_capture_moves(board_s, ROOK, is_check, move_capture_list);
+    get_piece_capture_moves(board_s, QUEEN, is_check, move_capture_list);
 }
 
 bool is_mate_bb(BoardState *board_s)
