@@ -369,6 +369,30 @@ BoardState *move_piece(BoardState *board_s, Move sel_move)
         board_s->all_pieces_bb[enemy_color][dest_piece.name] ^= 1ULL << coords_to_square(new_coords);
         board_s->phase -= PIECES_PHASE_VALUES[dest_piece.name];
         board_s->hash ^= zobrist_table[(dest_piece.name + 6 * enemy_color) * 64 + 8*new_coords.x + new_coords.y]; // remove the captured piece from the hash
+        // If we captured a rook on its original square, clear the corresponding castling right
+        if (dest_piece.name == ROOK)
+        {
+            if (enemy_color == WHITE && new_coords.x == 0 && new_coords.y == 0)
+            {
+                board_s->white_queenside_castlable = false;
+                board_s->hash ^= zobrist_table[769]; // remove white queenside castling right from the hash
+            }
+            else if (enemy_color == WHITE && new_coords.x == 0 && new_coords.y == 7)
+            {
+                board_s->white_kingside_castlable = false;
+                board_s->hash ^= zobrist_table[768]; // remove white kingside castling right from the hash
+            }
+            else if (enemy_color == BLACK && new_coords.x == 7 && new_coords.y == 0)
+            {
+                board_s->black_queenside_castlable = false;
+                board_s->hash ^= zobrist_table[771]; // remove black queenside castling right from the hash
+            }
+            else if (enemy_color == BLACK && new_coords.x == 7 && new_coords.y == 7)
+            {
+                board_s->black_kingside_castlable = false;
+                board_s->hash ^= zobrist_table[770]; // remove black kingside castling right from the hash
+            }
+        }
     }
     // fifty move rule
     if (is_empty(dest_piece) && move_piece.name != PAWN)

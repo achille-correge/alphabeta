@@ -31,6 +31,7 @@ v2.1.4
         -> + 129.8 +/- 64.7
     - Ajout des killers moves (moves qui provoquent un cutoff sur les branches cousines de la même depth, priorisé dans le move order car a des chances d'être un bon coup qui provoque un cutoff une nouvelle fois)
         -> + 51.6 +/- 41.6 elo par rapport au debug
+        -> Total +187.0 +/- 29.6 elo !!!
 
 
 v2.1.3 Move ordering
