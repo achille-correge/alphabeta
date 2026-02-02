@@ -1,7 +1,4 @@
-MOVE_ORDERING (v2.2)
-
-
-CLEAN DU CODE (v2.1) :
+VERSION STABLE / PERFORMANTE (v2.1) :
     - Stocker les variables de la recherche dans du contexte pour tout factoriser exemples :
         typedef struct {
             PositionList *board_history;
@@ -16,19 +13,26 @@ CLEAN DU CODE (v2.1) :
             int *nodes;
             int max_depth;
         } SearchContext;
-    - Pour de la perf : faire gaffe au cache. (Au pire demander à Gemini pour optimiser)
-        -> stocker les enums dans des uint8_t par exemple
+    - Passer en negamax pour de la clarté
+    - Ne pas se trimbaler l'historique partout et utiliser uniquement une table d'historique (mais continuer de faire des copies, c"est plus simple)
+    - In place board change
+    - Pour de la perf : faire gaffe au cache.
         -> stocker les moves dans des uint16_t (big taffe mais cool)
-    - Peut être? Ne pas se trimbaler l'historique partout et utiliser uniquement une table d'historique
+        -> Autres structures
     - Improve l'UCI avec des options supplémentaires
+    - Null move pruning
+    - Late move reduction (et donc probablement history heuristic aussi)
+    - Checks et promotions dans quiescence search
+    - Finetune l'éval, la pawn structure, la protection du roi etc...
+    - Staged move generation (d'abord partir avec le coup de la TT, puis générer les captures comme dans)
+
+    - NN MCTS / eval NNUE
 
 
 
 // Historique des changements
 
-v2.1.7 In place board change
-
-v2.1.6 Fix dans la TT
+v2.1.6 Fix dans la TT (et autres bugfixes)
     - Déjà on récupère les hits pour du move ordering, c'était raté avant, dans le tt_lookup, on mettait pas à jour le coup
     - Ensuite, big bug, quand le temps interrompait, on stoquait le résultat raté dans la TT
     - J'en ai profité pour rajouter des comptes des tt_hits etc...
