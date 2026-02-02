@@ -254,6 +254,26 @@ Bitboard get_attacks(BoardState *board_s)
     return attacks;
 }
 
+Bitboard get_allied_attacks(BoardState *board_s)
+{
+    Color color = board_s->player;
+    Bitboard ally = board_s->color_bb[color];
+    Bitboard enemy = board_s->color_bb[color ^ 1];
+    Bitboard blockers = ally | enemy;
+    Bitboard(*all_pieces_bb)[6] = board_s->all_pieces_bb;
+    Bitboard attacks = 0;
+    if (color == WHITE)
+        attacks |= get_white_pawn_pseudo_moves(all_pieces_bb[color][PAWN], ~ally & ~enemy, enemy, board_s->white_pawn_passant);
+    else
+        attacks |= get_black_pawn_pseudo_moves(all_pieces_bb[color][PAWN], ~ally & ~enemy, enemy, board_s->black_pawn_passant);
+    attacks |= get_knight_pseudo_moves(all_pieces_bb[color][KNIGHT], ally);
+    attacks |= get_rook_pseudo_moves(all_pieces_bb[color][ROOK], ally, blockers);
+    attacks |= get_bishop_pseudo_moves(all_pieces_bb[color][BISHOP], ally, blockers);
+    attacks |= get_queen_pseudo_moves(all_pieces_bb[color][QUEEN], ally, blockers);
+    attacks |= get_king_pseudo_moves_nocastle(all_pieces_bb[color][KING], ally);
+    return attacks;
+}
+
 bool is_king_in_check(BoardState *board_s)
 {
     // in theory we shouldn't need to check all the (pseudo) attacks, en passant rule has no effect on the the king for example

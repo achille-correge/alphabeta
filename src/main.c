@@ -11,6 +11,7 @@
 #include "eval.h"
 #include "bitboards_moves.h"
 #define MAX_MSG_LENGTH 32000
+#define TT_SIZE (1 << 24)
 
 void print_board(BoardState *board_s)
 {
@@ -41,7 +42,7 @@ void print_board(BoardState *board_s)
 void test_self_engine(double time_white, double time_black)
 {    
     TranspoTable global_transpo_table;
-    initialize_transposition_table(&global_transpo_table, 1 << 20);
+    initialize_transposition_table(&global_transpo_table, TT_SIZE);
 
     PositionList *board_history = empty_list();
     BoardState *board_s = init_board();
@@ -109,7 +110,7 @@ void test_uci_solo()
     char buffer[MAX_MSG_LENGTH] = {0};
 
     TranspoTable global_transpo_table;
-    initialize_transposition_table(&global_transpo_table, 1 << 24);
+    initialize_transposition_table(&global_transpo_table, TT_SIZE);
 
     PositionList *board_history = malloc(sizeof(PositionList));
     if (board_history == NULL)
@@ -151,7 +152,7 @@ void answer_uci()
     char buffer[MAX_MSG_LENGTH] = {0};
 
     TranspoTable global_transpo_table;
-    initialize_transposition_table(&global_transpo_table, 1 << 20);
+    initialize_transposition_table(&global_transpo_table, TT_SIZE);
 
     PositionList *board_history = malloc(sizeof(PositionList));
     if (board_history == NULL)

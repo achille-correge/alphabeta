@@ -72,7 +72,7 @@ void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score s
     entry->flag = flag;
 }
 
-bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, int beta, int *score, Move *best_move) {
+bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, int beta, int *score, Move *best_move, int *tt_depth) {
     TranspoTableEntry *entry = get_transposition_table_entry(table, hash);
 
     if (entry->hash == hash && entry->depth >= depth_to_go && entry->score != 0) {
@@ -80,16 +80,19 @@ bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, i
         if (entry->flag == EXACT) {
             *score = entry->score;
             *best_move = entry->best_move;
+            *tt_depth = entry->depth;
             return true;
         }
         if (entry->flag == LOWERBOUND && entry->score >= beta) {
             *score = entry->score;
             *best_move = entry->best_move;
+            *tt_depth = entry->depth;
             return true;
         }
         if (entry->flag == UPPERBOUND && entry->score <= alpha) {
             *score = entry->score;
             *best_move = entry->best_move;
+            *tt_depth = entry->depth;
             return true;
         }
     }
