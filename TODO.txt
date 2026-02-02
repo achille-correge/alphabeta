@@ -26,7 +26,13 @@ CLEAN DU CODE (v2.1) :
 
 // Historique des changements
 
-v2.1.6 In place board change
+v2.1.7 In place board change
+
+v2.1.6 Fix dans la TT
+    - Déjà on récupère les hits pour du move ordering, c'était raté avant, dans le tt_lookup, on mettait pas à jour le coup
+    - Ensuite, big bug, quand le temps interrompait, on stoquait le résultat raté dans la TT
+    - J'en ai profité pour rajouter des comptes des tt_hits etc...
+        -> 259.0 +/- 23.3 elo !
 
 v2.1.5b Fix Quiescence search
     - déjà j'avais pas aggrandi la taille de TT au bon endroit (dans mega tt), c'était toujours 2^20 et pas 2^22, c'est fix
@@ -34,6 +40,7 @@ v2.1.5b Fix Quiescence search
     - la partie alphabeta pruning à la fin cassait tout, je sais tjs pas pk. En le retirant j'ai eu +170.0 +/- 71.1 elo sur 100 parties
         -> + 186.8 +/- 21.2 elo le total
         -> on peut en profiter pour vérifier la TT, +x elo la TT, +x elo de 2^20 à 2^24
+    MAIS DANS TOUS LES CAS LE FIX EST TEMPORAIRE, NORMALEMENT ON PEUT FAIRE DU BETA PRUNING
 
 v2.1.5 Quiescence search (À AMÉLIORER SUREMENT)
     - bugfix sur le castling (les prises des tour retirent les droits)
@@ -53,7 +60,7 @@ v2.1.4 Killer Moves
 
 v2.1.3 Move ordering
     - eh gros sayer
-    - On ajoute un score à chaque coup généré en fonction des prises 
+    - On ajoute un score à chaque coup généré en fonction des prises (MVV-LVA)
       (ou un score de fou si c'est le meilleur coup de la TT avec moins de profondeur ou le coup de l'iterative deepening)
     - Comme ça on prend toujours le move de la tt en premier même si la profondeur est nulle
     - Ensuite, pendant le parcourt de la boucle pour chercher dans les mouvements, on fait du tri par insertion (on insère le meilleur coup comme prochain coup à parcourir en alphabeta)

@@ -13,7 +13,7 @@ uint64_t get_zobrist_hash(BoardState *board_s);
 void initialize_transposition_table(TranspoTable *table, size_t size);
 void free_transposition_table(TranspoTable *table);
 TranspoTableEntry *get_transposition_table_entry(TranspoTable *table, uint64_t hash);
-void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score score, int depth, Move best_move, Flag flag);
+void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score score, int depth_to_go, Move best_move, Flag flag);
 bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, int beta, int *score, Move *best_move, int *tt_depth);
 
 

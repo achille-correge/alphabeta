@@ -61,13 +61,13 @@ TranspoTableEntry *get_transposition_table_entry(TranspoTable *table, uint64_t h
     return &table->entries[index];
 }
 
-void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score score, int depth, Move best_move, Flag flag)
+void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score score, int depth_to_go, Move best_move, Flag flag)
 {
     size_t index = get_transposition_table_index(table, hash);
     TranspoTableEntry *entry = &table->entries[index];
     entry->hash = hash;
     entry->score = score;
-    entry->depth = depth;
+    entry->depth = depth_to_go;
     entry->best_move = best_move;
     entry->flag = flag;
 }
@@ -75,25 +75,17 @@ void store_transposition_table_entry(TranspoTable *table, uint64_t hash, Score s
 bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, int beta, int *score, Move *best_move, int *tt_depth) {
     TranspoTableEntry *entry = get_transposition_table_entry(table, hash);
 
-    if (entry->hash == hash && entry->depth >= depth_to_go && entry->score != 0) {
-        // Avoid using entries with zero score (could be polluted by contexts like threefold repetition)
-        if (entry->flag == EXACT) {
-            *score = entry->score;
-            *best_move = entry->best_move;
-            *tt_depth = entry->depth;
-            return true;
-        }
-        if (entry->flag == LOWERBOUND && entry->score >= beta) {
-            *score = entry->score;
-            *best_move = entry->best_move;
-            *tt_depth = entry->depth;
-            return true;
-        }
-        if (entry->flag == UPPERBOUND && entry->score <= alpha) {
-            *score = entry->score;
-            *best_move = entry->best_move;
-            *tt_depth = entry->depth;
-            return true;
+    if (entry->hash == hash)
+    {
+        *score = entry->score;
+        *best_move = entry->best_move;
+        *tt_depth = entry->depth;
+        if (entry->depth >= depth_to_go && entry->score != 0) {
+            // if (entry->depth > 1) fprintf(stderr, "TT hit with depth %d (needed %d)\n", entry->depth, depth_to_go);
+            // Return a cutoff if there is one
+            return  (entry->flag == EXACT) ||
+                    (entry->flag == LOWERBOUND && entry->score >= beta) ||
+                    (entry->flag == UPPERBOUND && entry->score <= alpha);
         }
     }
     return false;
