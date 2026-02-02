@@ -2,6 +2,7 @@
 #define ALPHABETA_AUXILIARY_H
 #include "types.h"
 
+int quiesce_inodes = 0;
 int quiesce_nodes = 0;
 
 int alpha_beta_score(PositionList *board_history, Color color, int is_max);

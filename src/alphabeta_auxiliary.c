@@ -110,6 +110,7 @@ void swap_best_move(MoveList *move_list, int index)
 }
 
 extern int quiesce_nodes;
+extern int quiesce_inodes;
 // Il manque la TT dans la quiescence search, mais ça fonctionne pas pareil
 // (un move de quiescence ne doit pas remplacer un move normal dans la TT)
 Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList *board_history, Color color, int is_max)
@@ -118,6 +119,7 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     // 1. ÉVALUATION STATIQUE (Stand Pat)
     // C'est le score si on décidait d'arrêter les échanges ici.
     Score stand_pat = alpha_beta_score(board_history, color, is_max);
+    quiesce_nodes++;
 
     if (is_max) {
         if (stand_pat >= beta) return stand_pat;
@@ -154,7 +156,7 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     Score bestscore = stand_pat;
 
     for (int i = 0; i < capture_list->size; i++) {
-        quiesce_nodes++;
+        quiesce_inodes++;
         // fprintf(stderr, "depth: %d i: %d / %d\n", depth, i+1, capture_list->size);
         swap_best_move(capture_list, i);
         Move new_move = capture_list->moves[i];

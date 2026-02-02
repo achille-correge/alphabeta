@@ -12,10 +12,12 @@
 #include "transposition_tables.h"
 #include "alphabeta_auxiliary.h"
 
+extern int quiesce_inodes;
 extern int quiesce_nodes;
 
 static int tt_hits = 0;
 static int tt_cutoffs = 0;
+static int nodes = 0;
 
 // do an optimized version of the possible moves function using bitboards
 // board_s is the current board state
@@ -42,9 +44,9 @@ typedef struct
 // nodes is the number of nodes checked
 // return the score of the best move
 
-MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, int is_min, int *nodes, clock_t start_clk, double max_time, Move prio_move, Move killer_moves[2][MAX_SEARCH_PLY])
+MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, int is_min, clock_t start_clk, double max_time, Move prio_move, Move killer_moves[2][MAX_SEARCH_PLY])
 {
-    *nodes = *nodes + 1;
+    nodes = nodes + 1;
     bool interrupted = false;
     MoveScore result;
     result.move = tested_move;
@@ -129,16 +131,19 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         result.score = -MAX_SCORE;
         for (int i = 0; i < move_list->size; i++)
         {
-            time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
-            if (time_taken > max_time)
+            if (nodes >> 10 != 0)
             {
-                // si on n'a pas fini d'évaluer nos coups, on prend le mieux qu'on a trouvé
-                if (depth == 0)
-                    {
-                        fprintf(stderr, "time exceeded the limit, time taken: %f\n", time_taken);
-                    }
-                interrupted = true;
-                break;
+                time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
+                if (time_taken > max_time)
+                {
+                    // si on n'a pas fini d'évaluer nos coups, on prend le mieux qu'on a trouvé
+                    if (depth == 0)
+                        {
+                            fprintf(stderr, "time exceeded the limit, time taken: %f\n", time_taken);
+                        }
+                    interrupted = true;
+                    break;
+                }
             }
             swap_best_move(move_list, i);
             Move new_move = move_list->moves[i];
@@ -146,7 +151,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             new_board_s = move_piece(new_board_s, new_move);
             new_board_history->board_s = new_board_s;
             int new_score;
-            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 0, 1, nodes, start_clk, max_time, empty_move(), killer_moves);
+            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 0, 1, start_clk, max_time, empty_move(), killer_moves);
             new_score = new_move_score.score;
             if (new_score > result.score)
             {
@@ -170,13 +175,16 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         result.score = MAX_SCORE;
         for (int i = 0; i < move_list->size; i++)
         {
-            time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
-            if (time_taken > max_time)
+            if (nodes >> 10 != 0)
             {
-                // si on n'a pas fini d'évaler les coups de l'ennemi, on considère qu'il est dans une position gagnante
-                result.score = -MAX_SCORE;
-                interrupted = true;
-                break;
+                time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
+                if (time_taken > max_time)
+                {
+                    // si on n'a pas fini d'évaler les coups de l'ennemi, on considère qu'il est dans une position gagnante
+                    result.score = -MAX_SCORE;
+                    interrupted = true;
+                    break;
+                }
             }
             swap_best_move(move_list, i);
             Move new_move = move_list->moves[i];
@@ -184,7 +192,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             new_board_s = move_piece(new_board_s, new_move);
             new_board_history->board_s = new_board_s;
             int new_score;
-            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 1, 0, nodes, start_clk, max_time, empty_move(), killer_moves);
+            MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, 1, 0, start_clk, max_time, empty_move(), killer_moves);
             new_score = new_move_score.score;
             if (new_score < result.score)
             {
@@ -223,9 +231,10 @@ Move iterative_deepening(TranspoTable *tt, PositionList *board_history, Color co
     MoveScore new_move_score;
     clock_t start_iter, end_iter;
     double cpu_time_used;
-    int nodes = 0;
     int score;
-    double nps;
+    // double nps;
+    double total_nodes;
+    double total_nps;
     Move killer_moves[2][MAX_SEARCH_PLY]; // initialize killer moves
     for (int k = 0; k < 2; k++)
     {
@@ -238,21 +247,26 @@ Move iterative_deepening(TranspoTable *tt, PositionList *board_history, Color co
     {
         nodes = 0;
         quiesce_nodes = 0;
+        quiesce_inodes = 0;
         tt_hits = 0;
         tt_cutoffs = 0;
         start_iter = clock();
-        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), 1, 0, &nodes, glob_start, max_time, move, killer_moves);
+        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), 1, 0, glob_start, max_time, move, killer_moves);
         end_iter = clock();
         cpu_time_used = ((double)(end_iter - start_iter)) / CLOCKS_PER_SEC;
-        nps = nodes / cpu_time_used;
+        // nps = nodes / cpu_time_used;
+        total_nodes = nodes + quiesce_nodes;
+        total_nps = total_nodes / cpu_time_used;
         if (!is_empty_move(new_move_score.move))
         {
             move = new_move_score.move;
         }
         double total_time = ((double)(clock() - glob_start)) / CLOCKS_PER_SEC;
-        fprintf(stderr, "depth: %d, move: %c%c -> %c%c, score: %d, time taken: %f, nodes checked: %d, quiesce nodes: %d, nps: %f, tt hits: %d, tt cutoffs: %d\n", i, 'a' + move.init_co.y, '1' + move.init_co.x, 'a' + move.dest_co.y, '1' + move.dest_co.x, new_move_score.score, cpu_time_used, nodes, quiesce_nodes, nps, tt_hits, tt_cutoffs);
-        if (total_time > max_time && new_move_score.score < -1000)
-            fprintf(stderr, "no move was completed on last iteration, taking previous score as reference\n");
+        fprintf(stderr, "depth %d: move: %c%c -> %c%c, score: %d, time taken: %f\n", i, 'a' + move.init_co.y, '1' + move.init_co.x, 'a' + move.dest_co.y, '1' + move.dest_co.x, new_move_score.score, cpu_time_used);
+        // fprintf(stderr, "         nodes checked: %d, quiesce nodes: %d, quiesce inodes: %d, nps: %f, total nps: %f, tt hits: %d, tt cutoffs: %d\n", nodes, quiesce_nodes, quiesce_inodes, nps, total_nps, tt_hits, tt_cutoffs);
+        fprintf(stderr, "         ab nodes: %d, quiesce nodes: %d, total nps: %f\n", nodes, quiesce_nodes, total_nps);
+        if (total_time > max_time && new_move_score.score < -10000)
+            fprintf(stderr, "not a single move was evaluated on last iteration (hence -mate score), taking previous score as reference\n");
         else
             score = new_move_score.score;
         if (abs(score) >= MAX_SCORE - 50)

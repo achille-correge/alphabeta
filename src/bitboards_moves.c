@@ -81,6 +81,19 @@ Bitboard get_black_pawn_pseudo_moves(Bitboard pawns, Bitboard empty, Bitboard en
     return (moves_1_square | moves_2_squares | attacks);
 }
 
+Bitboard get_white_pawns_pseudo_attacks(Bitboard pawns)
+{
+    Bitboard attacks = ((pawns & ~FILE_A) << 9);
+    attacks |= ((pawns & ~FILE_H) << 7);
+    return attacks;
+}
+Bitboard get_black_pawns_pseudo_attacks(Bitboard pawns)
+{
+    Bitboard attacks = ((pawns & ~FILE_H) >> 9);
+    attacks |= ((pawns & ~FILE_A) >> 7);
+    return attacks;
+}
+
 Bitboard init_white_knights()
 {
     return 0x42;
@@ -243,9 +256,9 @@ Bitboard get_attacks(BoardState *board_s)
     Bitboard(*all_pieces_bb)[6] = board_s->all_pieces_bb;
     Bitboard attacks = 0;
     if (enemy_color == WHITE)
-        attacks |= get_white_pawn_pseudo_moves(all_pieces_bb[enemy_color][PAWN], ~ally & ~enemy, ally, board_s->black_pawn_passant);
+        attacks |= get_white_pawns_pseudo_attacks(all_pieces_bb[enemy_color][PAWN]);
     else
-        attacks |= get_black_pawn_pseudo_moves(all_pieces_bb[enemy_color][PAWN], ~ally & ~enemy, ally, board_s->white_pawn_passant);
+        attacks |= get_black_pawns_pseudo_attacks(all_pieces_bb[enemy_color][PAWN]);
     attacks |= get_knight_pseudo_moves(all_pieces_bb[enemy_color][KNIGHT], enemy);
     attacks |= get_rook_pseudo_moves(all_pieces_bb[enemy_color][ROOK], enemy, blockers);
     attacks |= get_bishop_pseudo_moves(all_pieces_bb[enemy_color][BISHOP], enemy, blockers);
@@ -263,9 +276,9 @@ Bitboard get_allied_attacks(BoardState *board_s)
     Bitboard(*all_pieces_bb)[6] = board_s->all_pieces_bb;
     Bitboard attacks = 0;
     if (color == WHITE)
-        attacks |= get_white_pawn_pseudo_moves(all_pieces_bb[color][PAWN], ~ally & ~enemy, enemy, board_s->white_pawn_passant);
+        attacks |= get_white_pawns_pseudo_attacks(all_pieces_bb[color][PAWN]);
     else
-        attacks |= get_black_pawn_pseudo_moves(all_pieces_bb[color][PAWN], ~ally & ~enemy, enemy, board_s->black_pawn_passant);
+        attacks |= get_black_pawns_pseudo_attacks(all_pieces_bb[color][PAWN]);
     attacks |= get_knight_pseudo_moves(all_pieces_bb[color][KNIGHT], ally);
     attacks |= get_rook_pseudo_moves(all_pieces_bb[color][ROOK], ally, blockers);
     attacks |= get_bishop_pseudo_moves(all_pieces_bb[color][BISHOP], ally, blockers);

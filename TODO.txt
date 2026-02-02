@@ -34,6 +34,9 @@ v2.1.6 Fix dans la TT
     - J'en ai profité pour rajouter des comptes des tt_hits etc...
         -> 259.0 +/- 23.3 elo !
     - Ça permis de test que la table de transpo donnait +55.8 +/- 18.0. Ça m'a l'air faible mais bon
+    - Plus on check le temps que tous les 1024 noeuds, c'est amplement suffisant
+    - Plus un fix dans les mouvements du roi, les pièces de mouvements des pions étaient considérées comme des attaques où il pouvait pas aller
+        -> 28.2 +/- 12.6 elo
 
 v2.1.5b Fix Quiescence search
     - déjà j'avais pas aggrandi la taille de TT au bon endroit (dans mega tt), c'était toujours 2^20 et pas 2^22, c'est fix
