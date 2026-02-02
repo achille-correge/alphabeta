@@ -24,7 +24,7 @@ VERSION STABLE / PERFORMANTE (v2.1) :
     - Late move reduction (et donc probablement history heuristic aussi)
     - Checks et promotions dans quiescence search
     - Finetune l'éval, la pawn structure, la protection du roi etc...
-    - Staged move generation (d'abord partir avec le coup de la TT, puis générer les captures comme dans)
+    - Staged move generation (d'abord partir avec le coup de la TT, puis générer les captures comme dans le quiescence search, puis utiliser les killers qui existent déjà puis enfin les coups quiet)
 
     - NN MCTS / eval NNUE
 
