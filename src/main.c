@@ -11,7 +11,7 @@
 #include "eval.h"
 #include "bitboards_moves.h"
 #define MAX_MSG_LENGTH 32000
-#define TT_SIZE (1 << 24) // 16 million entries
+#define TT_SIZE (1 << 24) // Entries in transposition table
 
 void print_board(BoardState *board_s)
 {

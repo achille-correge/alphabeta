@@ -131,7 +131,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         result.score = -MAX_SCORE;
         for (int i = 0; i < move_list->size; i++)
         {
-            if (nodes >> 10 != 0)
+            if ((nodes << 25) == 0)
             {
                 time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
                 if (time_taken > max_time)
@@ -175,7 +175,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         result.score = MAX_SCORE;
         for (int i = 0; i < move_list->size; i++)
         {
-            if (nodes >> 10 != 0)
+            if ((nodes << 25) == 0)
             {
                 time_taken = ((double)(clock() - start_clk)) / CLOCKS_PER_SEC;
                 if (time_taken > max_time)

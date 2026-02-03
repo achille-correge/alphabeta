@@ -32,6 +32,13 @@ VERSION STABLE / PERFORMANTE (v2.1) :
 
 // Historique des changements
 
+v2.1.7 Negamax refactor
+    - Fix bug Sur quand on check le temps pour syop. Mtn il le fait vraiment 1 sur 128 nodes. Ça améliore un peu les nps (pas de comparaison brute mais ça se voit)
+        -> +24.6 +/- 17.8 elo. Peut être on peut check encore moins régulièrement, mais faire gaffe à pas trop (4096 j'avais test on perd des games au temps en 10+0.1)
+            -> si on fait 1/1024, on a ~0.003 de dépassement, 1/128, ~0.0003, 1/256 ou 512 semble être un meilleur compromis mais l'impact sur le elo est nul, autant rester en 1/128, qui a été testé
+    
+
+
 v2.1.6 Fix dans la TT (et autres bugfixes)
     - Déjà on récupère les hits pour du move ordering, c'était raté avant, dans le tt_lookup, on mettait pas à jour le coup
     - Ensuite, big bug, quand le temps interrompait, on stoquait le résultat raté dans la TT
