@@ -26,6 +26,18 @@ int alpha_beta_score(PositionList *board_history, Color color, int is_max)
     }
 }
 
+Score negamax_score(PositionList *board_history)
+{
+    if (board_history->board_s->player == WHITE)
+    {
+        return eval(board_history);
+    }
+    else
+    {
+        return -eval(board_history);
+    }
+}
+
 void insert_killer_move(Move killer_moves[2][MAX_SEARCH_PLY], Move move, int depth)
 {
     // 1. Si le coup est déjà le premier killer, on ne fait rien
@@ -113,21 +125,15 @@ extern int quiesce_nodes;
 extern int quiesce_inodes;
 // Il manque la TT dans la quiescence search, mais ça fonctionne pas pareil
 // (un move de quiescence ne doit pas remplacer un move normal dans la TT)
-Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList *board_history, Color color, int is_max)
+Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList *board_history, Color color)
 {
     // printf("QS Depth: %d, Nodes: %d\n", depth, *nodes);
     // 1. ÉVALUATION STATIQUE (Stand Pat)
     // C'est le score si on décidait d'arrêter les échanges ici.
-    Score stand_pat = alpha_beta_score(board_history, color, is_max);
+    Score stand_pat = negamax_score(board_history);
     quiesce_nodes++;
-
-    if (is_max) {
-        if (stand_pat >= beta) return stand_pat;
-        if (stand_pat > alpha) alpha = stand_pat;
-    } else {
-        if (stand_pat <= alpha) return stand_pat;
-        if (stand_pat < beta) beta = stand_pat;
-    }
+    if (stand_pat >= beta) return stand_pat;
+    if (stand_pat > alpha) alpha = stand_pat;
     // fprintf(stderr, "QS Depth %d: Stand pat score: %d\n", depth, stand_pat);
     // print_bitboard(board_history->board_s->color_bb[color ^ 1]); // print opponent pieces bitboard
     // print_bitboard(board_history->board_s->color_bb[color]); // print opponent pieces bitboard
@@ -152,7 +158,6 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     PositionList *new_board_history = &new_board_history_val;
     new_board_history->tail = board_history;
 
-    // Score bestscore = is_max ? -MAX_SCORE : MAX_SCORE;
     Score bestscore = stand_pat;
 
     for (int i = 0; i < capture_list->size; i++) {
@@ -164,13 +169,8 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
         // 3. DELTA PRUNING
         // Si même en capturant la pièce la plus chère (plus une marge), 
         // on n'atteint pas alpha, on ignore ce coup.
-        if (is_max) {
-            int capture_value = MVV_LVA[board_history->board_s->board[new_move.dest_co.x][new_move.dest_co.y].name];
-            if (stand_pat + capture_value + 200 < alpha) continue;
-        } else {
-            int capture_value = MVV_LVA[board_history->board_s->board[new_move.dest_co.x][new_move.dest_co.y].name];
-            if (stand_pat - capture_value - 200 > beta) continue;
-        }
+        int capture_value = MVV_LVA[board_history->board_s->board[new_move.dest_co.x][new_move.dest_co.y].name];
+        if (stand_pat + capture_value + 200 < alpha) continue;
         // fprintf(stderr, "depth: %d i0: %d / %d\n", depth, i+1, capture_list->size);
         // Exécution du coup
 
@@ -178,17 +178,11 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
         new_board_s = move_piece(new_board_s, new_move);
         new_board_history->board_s = new_board_s;
 
-        Score score = quiesce(alpha, beta, depth + 1, table, new_board_history, color ^ 1, !is_max);
+        Score score = -quiesce(-beta, -alpha, depth + 1, table, new_board_history, color ^ 1);
 
-        if (is_max) {
-            // if (score >= beta) return score;
-            if (score > bestscore) bestscore = score;
-            if (score > alpha) alpha = score;
-        } else {
-            // if (score <= alpha) return score;
-            if (score < bestscore) bestscore = score;
-            if (score < beta) beta = score;
-        }
+        // if (score >= beta) return score;
+        if (score > bestscore) bestscore = score;
+        if (score > alpha) alpha = score;
     }
 
     return bestscore;

@@ -61,7 +61,14 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         if (!(is_king_in_check(board_history->board_s) && depth-max_depth < 8))
         {
             // quiescence search
-            result.score = quiesce(alpha, beta, depth, table, board_history, color, is_max);
+            if (is_max)
+            {
+                result.score = quiesce(alpha, beta, depth, table, board_history, color, 1);
+            }
+            else
+            {
+                result.score = -quiesce(-beta, -alpha, depth, table, board_history, color, 0);
+            }
             store_transposition_table_entry(table, board_history->board_s->hash, result.score, 0, empty_move(), EXACT);
             return result;
         }

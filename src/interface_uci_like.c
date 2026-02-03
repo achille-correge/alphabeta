@@ -195,7 +195,7 @@ void handle_uci_command(char *command, TranspoTable *tt, PositionList *board_his
     char *token = strtok(command, " ");
     if (strcmp(token, "uci\n") == 0)
     {
-        printf("id name felabot 2.1.7-b\n");
+        printf("id name felabot 2.1.7-negamax-tt22\n");
         fflush(stdout);
         printf("id author Achille Correge\n");
         fflush(stdout);
