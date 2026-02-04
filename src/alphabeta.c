@@ -18,6 +18,7 @@ extern int quiesce_nodes;
 static int tt_hits = 0;
 static int tt_cutoffs = 0;
 static int nodes = 0;
+static bool search_interrupted = false;
 
 // do an optimized version of the possible moves function using bitboards
 // board_s is the current board state
@@ -39,15 +40,12 @@ typedef struct
 // board_s is the current board state
 // color is the color of the player to move
 // tested_move is the move to make
-// is_max is true if the current player is the maximizing player
-// is_min is true if the current player is the minimizing player
 // nodes is the number of nodes checked
 // return the score of the best move
 
-MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, int is_max, clock_t start_clk, double max_time, Move prio_move, Move killer_moves[2][MAX_SEARCH_PLY])
+MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable *table, PositionList *board_history, Color color, Move tested_move, clock_t start_clk, double max_time, Move prio_move, Move killer_moves[2][MAX_SEARCH_PLY])
 {
     nodes = nodes + 1;
-    bool interrupted = false;
     MoveScore result;
     result.move = tested_move;
     if ((threefold_hash(board_history->board_s->hash, board_history, 1) || board_history->board_s->fifty_move_rule >= 100) && depth > 0)
@@ -61,14 +59,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         if (!(is_king_in_check(board_history->board_s) && depth-max_depth < 8))
         {
             // quiescence search
-            if (is_max)
-            {
-                result.score = quiesce(alpha, beta, depth, table, board_history, color);
-            }
-            else
-            {
-                result.score = -quiesce(-beta, -alpha, depth, table, board_history, color);
-            }
+            result.score = quiesce(alpha, beta, depth, table, board_history, color);
             store_transposition_table_entry(table, board_history->board_s->hash, result.score, 0, empty_move(), EXACT);
             return result;
         }
@@ -81,7 +72,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     {
         if (is_king_in_check(board_history->board_s))
         {
-            result.score = is_max ? -(MAX_SCORE - depth) : (MAX_SCORE - depth);
+            result.score = -(MAX_SCORE - depth);
             return result;
         }
         result.score = 0;
@@ -133,14 +124,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     // Score moves for move ordering
     score_moves(board_history->board_s, move_list, prio_move, depth, killer_moves);
     Flag tt_flag = EXACT;
-    if (is_max)
-    {
-        result.score = -MAX_SCORE;
-    }
-    else
-    {
-        result.score = MAX_SCORE;
-    }
+    result.score = -MAX_SCORE;
     for (int i = 0; i < move_list->size; i++)
     {
         if ((nodes << 25) == 0)
@@ -153,12 +137,8 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
                     {
                         fprintf(stderr, "time exceeded the limit, time taken: %f\n", time_taken);
                     }
-                interrupted = true;
-                if (!is_max) // Si c'est le score du minimiseur alors qu'on n'a pas tout évalué, on considère qu'il lui reste un coup gagnant
-                {
-                    result.score = -MAX_SCORE;
-                }
-                break;
+                search_interrupted = true;
+                return result;
             }
         }
         swap_best_move(move_list, i);
@@ -167,49 +147,29 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
         new_board_s = move_piece(new_board_s, new_move);
         new_board_history->board_s = new_board_s;
         int new_score;
-        MoveScore new_move_score = alphabeta(alpha, beta, depth + 1, max_depth, table, new_board_history, next_color, new_move, !is_max, start_clk, max_time, empty_move(), killer_moves);
-        new_score = new_move_score.score;
-        if (is_max)
+        MoveScore new_move_score = alphabeta(-beta, -alpha, depth + 1, max_depth, table, new_board_history, next_color, new_move, start_clk, max_time, empty_move(), killer_moves);
+        if (search_interrupted)
         {
-            if (new_score > result.score)
-            {
-                result.move = new_move;
-                result.score = new_score;
-            }
-            if (result.score > alpha)
-            {
-                alpha = result.score;
-            }
-            if (alpha >= beta)
-            {
-                tt_flag = LOWERBOUND;
-                insert_killer_move(killer_moves, new_move, depth);
-                break;
-            }
+            return result;
         }
-        else{
-
-            if (new_score < result.score)
-            {
-                result.score = new_score;
-                result.move = new_move;
-            }
-            if (result.score < beta)
-            {
-                beta = result.score;
-            }
-            if (alpha >= beta)
-            {
-                tt_flag = UPPERBOUND;
-                insert_killer_move(killer_moves, new_move, depth);
-                break;
-            }
+        new_score = -new_move_score.score;
+        if (new_score > result.score)
+        {
+            result.move = new_move;
+            result.score = new_score;
+        }
+        if (result.score > alpha)
+        {
+            alpha = result.score;
+        }
+        if (alpha >= beta)
+        {
+            tt_flag = LOWERBOUND;
+            insert_killer_move(killer_moves, new_move, depth);
+            break;
         }
     }
-    if (!interrupted)
-    {
-        store_transposition_table_entry(table, board_history->board_s->hash, result.score, depth_to_go, result.move, tt_flag);
-    }
+    store_transposition_table_entry(table, board_history->board_s->hash, result.score, depth_to_go, result.move, tt_flag);
     return result;
 }
 
@@ -245,8 +205,9 @@ Move iterative_deepening(TranspoTable *tt, PositionList *board_history, Color co
         quiesce_inodes = 0;
         tt_hits = 0;
         tt_cutoffs = 0;
+        search_interrupted = false;
         start_iter = clock();
-        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), 1, glob_start, max_time, move, killer_moves);
+        new_move_score = alphabeta(-MAX_SCORE, MAX_SCORE, 0, i, tt, board_history, color, empty_move(), glob_start, max_time, move, killer_moves);
         end_iter = clock();
         cpu_time_used = ((double)(end_iter - start_iter)) / CLOCKS_PER_SEC;
         // nps = nodes / cpu_time_used;

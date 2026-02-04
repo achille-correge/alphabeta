@@ -39,6 +39,7 @@ v2.1.7 Negamax refactor - objectif
         -> Je l'ai relancé depuis et +0 elo wtf
     - j'ai tout remis en tt à 2^22 poue sauver de la place, ça perd ~40 elo aussi sur 100 parties, à remettre en 24 pour lichess
     - quiescence en negamax (+7.3 +/- 24.9 elo sur 500 games)
+    - alphabeta en negamax (-1.2 +/- 23.8 elo sur 573 games)
     
 
 
