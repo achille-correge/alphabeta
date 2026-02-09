@@ -124,6 +124,7 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
     // Score moves for move ordering
     score_moves(board_history->board_s, move_list, prio_move, depth, killer_moves);
     Flag tt_flag = EXACT;
+    Score alpha_orig = alpha;
     result.score = -MAX_SCORE;
     for (int i = 0; i < move_list->size; i++)
     {
@@ -168,6 +169,10 @@ MoveScore alphabeta(int alpha, int beta, int depth, int max_depth, TranspoTable 
             insert_killer_move(killer_moves, new_move, depth);
             break;
         }
+    }
+    if (result.score <= alpha_orig)
+    {
+        tt_flag = UPPERBOUND;
     }
     store_transposition_table_entry(table, board_history->board_s->hash, result.score, depth_to_go, result.move, tt_flag);
     return result;

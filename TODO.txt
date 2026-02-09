@@ -32,7 +32,7 @@ VERSION STABLE / PERFORMANTE (v2.1) :
 
 // Historique des changements
 
-v2.1.7 Negamax refactor - objectif
+v2.1.7 Negamax refactor - objectif 0 elo
     - Fix bug Sur quand on check le temps pour syop. Mtn il le fait vraiment 1 sur 128 nodes. Ça améliore un peu les nps (pas de comparaison brute mais ça se voit)
         -> +24.6 +/- 17.8 elo. Peut être on peut check encore moins régulièrement, mais faire gaffe à pas trop (4096 j'avais test on perd des games au temps en 10+0.1)
             -> si on fait 1/1024, on a ~0.003 de dépassement, 1/128, ~0.0003, 1/256 ou 512 semble être un meilleur compromis mais l'impact sur le elo est nul, autant rester en 1/128, qui a été testé
@@ -40,6 +40,9 @@ v2.1.7 Negamax refactor - objectif
     - j'ai tout remis en tt à 2^22 poue sauver de la place, ça perd ~40 elo aussi sur 100 parties, à remettre en 24 pour lichess
     - quiescence en negamax (+7.3 +/- 24.9 elo sur 500 games)
     - alphabeta en negamax (-1.2 +/- 23.8 elo sur 573 games)
+    - tentative de remise en place du beta pruning dans la quiesce, bizarre, -36 +/- 24 elo sur 500 games, -16.8 +/- 15.9 elo sur 1250 games, -17.0 +/- 12.7 elo sur 2000 games -> je mets pas en place
+    - J'ai fait un truc similaire pour le pruning de la TT, avec des résultats similaires
+        -> Surprenemment, j'ai testé avec que le fail low cutoff et ça marche (+21.7 +/- 23.0 sur 500 games. Je stop là), il doit vraiment y avoir un bug dans mes fail high cutoffs
     
 
 
