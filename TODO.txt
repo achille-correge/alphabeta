@@ -31,7 +31,7 @@ v2.1.7 Negamax refactor - objectif 0 elo
     - alphabeta avec une struct de contexte (+8.9 +/- 25.0 elo sur 500 games)
     - ajout du struct de contexte dans la quiesce et opti de certains params (+28.8 +/- 23.9 elo sur 500 games)
     - COMPILATION AVEC -O3 : max 1-2M nps -> 5.7M nps (175.0 +/- 28.4 elo vs qnegamax)
-    ------> +208.6 +/- 46.6 elo vs 2.1.6 fixes
+    ------> +208.6 +/- 46.6 elo vs 2.1.6 fixes over 200 games
     
 
 
