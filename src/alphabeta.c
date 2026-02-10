@@ -12,11 +12,6 @@
 #include "transposition_tables.h"
 #include "alphabeta_auxiliary.h"
 
-// extern int quiesce_inodes;
-// extern int quiesce_nodes;
-
-// static int tt_hits = 0;
-// static int tt_cutoffs = 0;
 
 // do an optimized version of the possible moves function using bitboards
 // board_s is the current board state
@@ -33,12 +28,6 @@ typedef struct
 
 // alpha is the best score that the maximizing player can guarantee
 // beta is the best score that the minimizing player can guarantee
-// depth is the depth of the search
-// max_depth is the maximum depth of the search
-// board_s is the current board state
-// color is the color of the player to move
-// tested_move is the move to make
-// nodes is the number of nodes checked
 // return the score of the best move
 
 
