@@ -121,17 +121,17 @@ void swap_best_move(MoveList *move_list, int index)
     }
 }
 
-extern int quiesce_nodes;
-extern int quiesce_inodes;
 // Il manque la TT dans la quiescence search, mais ça fonctionne pas pareil
 // (un move de quiescence ne doit pas remplacer un move normal dans la TT)
-Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList *board_history, Color color)
+Score quiesce(SearchContext *ctx, int alpha, int beta, int depth, PositionList *board_history)
 {
     // printf("QS Depth: %d, Nodes: %d\n", depth, *nodes);
     // 1. ÉVALUATION STATIQUE (Stand Pat)
     // C'est le score si on décidait d'arrêter les échanges ici.
     Score stand_pat = negamax_score(board_history);
-    quiesce_nodes++;
+    BoardState *board_s = board_history->board_s;
+    Color color = board_s->player;
+    ctx->quiesce_nodes++;
     if (stand_pat >= beta) return stand_pat;
     if (stand_pat > alpha) alpha = stand_pat;
     // fprintf(stderr, "QS Depth %d: Stand pat score: %d\n", depth, stand_pat);
@@ -139,7 +139,7 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     // print_bitboard(board_history->board_s->color_bb[color]); // print opponent pieces bitboard
     // print_bitboard(get_allied_attacks(board_history->board_s)); // print attacks bitboard
 
-    Bitboard captures = get_allied_attacks(board_history->board_s) & board_history->board_s->color_bb[color ^ 1];
+    Bitboard captures = get_allied_attacks(board_s) & board_s->color_bb[color ^ 1];
     // fprintf(stderr, "QS Depth %d: Captures bitboard:\n", depth);
     if (captures == 0) {
         return stand_pat;
@@ -148,10 +148,10 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     // 2. GÉNÉRATION DES CAPTURES UNIQUEMENT
     MoveList capture_list_val;
     MoveList *capture_list = &capture_list_val;
-    init_possible_capture_moves_bb(board_history->board_s, capture_list);
+    init_possible_capture_moves_bb(board_s, capture_list);
     
     // Tri des captures (MVV-LVA recommandé ici)
-    score_moves(board_history->board_s, capture_list, empty_move(), depth, NULL);
+    score_moves(board_s, capture_list, empty_move(), depth, NULL);
     BoardState new_board_s_val;
     PositionList new_board_history_val;
     BoardState *new_board_s = &new_board_s_val;
@@ -161,7 +161,7 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
     Score bestscore = stand_pat;
 
     for (int i = 0; i < capture_list->size; i++) {
-        quiesce_inodes++;
+        ctx->quiesce_inodes++;
         // fprintf(stderr, "depth: %d i: %d / %d\n", depth, i+1, capture_list->size);
         swap_best_move(capture_list, i);
         Move new_move = capture_list->moves[i];
@@ -178,7 +178,7 @@ Score quiesce(int alpha, int beta, int depth, TranspoTable *table, PositionList 
         new_board_s = move_piece(new_board_s, new_move);
         new_board_history->board_s = new_board_s;
 
-        Score score = -quiesce(-beta, -alpha, depth + 1, table, new_board_history, color ^ 1);
+        Score score = -quiesce(ctx, -beta, -alpha, depth + 1, new_board_history);
 
         // if (score >= beta) return score;
         if (score > bestscore) bestscore = score;

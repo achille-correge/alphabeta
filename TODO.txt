@@ -42,7 +42,10 @@ v2.1.7 Negamax refactor - objectif 0 elo
     - alphabeta en negamax (-1.2 +/- 23.8 elo sur 573 games)
     - tentative de remise en place du beta pruning dans la quiesce, bizarre, -36 +/- 24 elo sur 500 games, -16.8 +/- 15.9 elo sur 1250 games, -17.0 +/- 12.7 elo sur 2000 games -> je mets pas en place
     - J'ai fait un truc similaire pour le pruning de la TT, avec des résultats similaires
-        -> Surprenemment, j'ai testé avec que le fail low cutoff et ça marche (+21.7 +/- 23.0 sur 500 games. Je stop là), il doit vraiment y avoir un bug dans mes fail high cutoffs
+        -> Surprenemment, j'ai testé avec que le fail low cutoff et ça marche (+21.7 +/- 23.0 sur 500 games. Je stop là), il doit vraiment y avoir un bug dans mes fail high cutoffs. C'était descendu à +8 sur 2k games je crois
+    - alphabeta avec une struct de contexte (+8.9 +/- 25.0 elo sur 500 games)
+    - ajout du struct de contexte dans la quiesce et opti de certains params (+28.8 +/- 23.9 elo sur 500 games)
+    - COMPILATION AVEC -O3 : max 1-2M nps -> 5.7M nps ()
     
 
 

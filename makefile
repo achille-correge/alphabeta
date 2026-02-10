@@ -2,7 +2,7 @@
 CC = gcc
 
 # Define the compiler flags
-CFLAGS = -Wall -Iinclude
+CFLAGS = -Wall -Iinclude -march=native -O3
 
 # Define the source files
 SRCS = $(filter-out src/make_magic.c src/make_zobrist.c, $(wildcard src/*.c))
@@ -15,7 +15,7 @@ OBJS = $(patsubst src/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 
 # Define the output directory and executable name
 BUILD_DIR = builds
-EXECUTABLE = $(BUILD_DIR)/felabot_2.1.7-negamax-tt22
+EXECUTABLE = $(BUILD_DIR)/felabot_2.1.7-opti-tt22
 
 # Define the default target
 all: $(EXECUTABLE)
