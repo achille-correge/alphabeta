@@ -114,7 +114,6 @@ MoveScore alphabeta(SearchContext *ctx, int alpha, int beta, int depth, Position
     // Score moves for move ordering
     score_moves(board_s, move_list, prio_move, depth, ctx->killer_moves);
     Flag tt_flag = EXACT;
-    Score alpha_orig = alpha;
     result.score = -MAX_SCORE;
     for (int i = 0; i < move_list->size; i++)
     {
@@ -160,7 +159,7 @@ MoveScore alphabeta(SearchContext *ctx, int alpha, int beta, int depth, Position
             break;
         }
     }
-    if (result.score <= alpha_orig)
+    if (result.score <= alpha)      // Pour fail low, il y a sûrement eu une coupure dans les fils, donc c'est juste une upperbound
     {
         tt_flag = UPPERBOUND;
     }

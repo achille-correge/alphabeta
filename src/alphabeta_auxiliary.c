@@ -180,7 +180,7 @@ Score quiesce(SearchContext *ctx, int alpha, int beta, int depth, PositionList *
 
         Score score = -quiesce(ctx, -beta, -alpha, depth + 1, new_board_history);
 
-        // if (score >= beta) return score;
+        if (score >= beta) return score;
         if (score > bestscore) bestscore = score;
         if (score > alpha) alpha = score;
     }

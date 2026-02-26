@@ -1,4 +1,6 @@
 VERSION STABLE / PERFORMANTE (v2.1) :
+    - faire gaffe aux fail high et fail low
+    - Fix la pawn structure eval parce que c'est pas ça
     - Ne pas se trimbaler l'historique partout et utiliser uniquement une table d'historique (mais continuer de faire des copies, c"est plus simple)
     - In place board change
     - Pour de la perf : faire gaffe au cache.
@@ -32,8 +34,8 @@ v2.1.7 Negamax refactor - objectif 0 elo
     - ajout du struct de contexte dans la quiesce et opti de certains params (+28.8 +/- 23.9 elo sur 500 games)
     - COMPILATION AVEC -O3 : max 1-2M nps -> 5.7M nps (175.0 +/- 28.4 elo vs qnegamax)
     ------> +208.6 +/- 46.6 elo vs 2.1.6 fixes over 200 games
-    
-
+    - Remis les bet cutoff (fail high) dans les TT
+        -> +12.9 +/- 15.7 sur 1300 games
 
 
 v2.1.6 Fix dans la TT (et autres bugfixes)

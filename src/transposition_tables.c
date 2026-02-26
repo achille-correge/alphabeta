@@ -84,7 +84,7 @@ bool tt_lookup(TranspoTable *table, uint64_t hash, int depth_to_go, int alpha, i
             // if (entry->depth > 1) fprintf(stderr, "TT hit with depth %d (needed %d)\n", entry->depth, depth_to_go);
             // Return a cutoff if there is one
             return  (entry->flag == EXACT)
-            // || (entry->flag == LOWERBOUND && entry->score >= beta)       // fail high cutoff
+            || (entry->flag == LOWERBOUND && entry->score >= beta)       // fail high cutoff
             || (entry->flag == UPPERBOUND && entry->score <= alpha)         // fail low cutoff
             ;
         }

@@ -191,6 +191,7 @@ void init_eval_tables()
     }
 }
 
+// En fait faut mettre ULL pour que ça marche
 #define RANK_1 0xFF
 #define RANK_2 0xFF00
 #define RANK_3 0xFF0000
@@ -218,12 +219,13 @@ int one_pawn_structure_eval(BoardState *board_s, int x, int y, Color color)
 {
     int score = 0;
     Bitboard pawns = board_s->all_pieces_bb[color][PAWN];
-    Bitboard opponent_pawns = board_s->all_pieces_bb[color ^ 1][PAWN];
-    Bitboard in_front_mask = under_over_ranks[color ^ 1][x];
-    Bitboard left_file = FILE_H << (7 - y + 1);
-    Bitboard pwn_file = FILE_H << (7-y);
-    Bitboard right_file = FILE_H << (7-y-1);
-    Bitboard pwn_row = RANK_1 << x*8;
+    // Bitboard opponent_pawns = board_s->all_pieces_bb[color ^ 1][PAWN];
+    // Bitboard in_front_mask = under_over_ranks[color ^ 1][x];
+    // je crois qu'il faur retirer les 7 - normalement
+    Bitboard left_file = FILE_H << (y + 1);
+    Bitboard pwn_file = FILE_H << y;
+    Bitboard right_file = FILE_H << (y-1);
+    Bitboard pwn_row = RANK_1 << (x*8);
     // Bitboard pwn = pwn_file & pwn_row;
     // int start_row = color == 'w' ? 6 : 1;
     // bool semi_open_file = (pwn_file & opponent_pawns) == 0;
@@ -250,11 +252,15 @@ int one_pawn_structure_eval(BoardState *board_s, int x, int y, Color color)
     }
 
     // PASSED
-    if ((opponent_pawns & left_file & right_file & in_front_mask) == 0)
-    {
-        int advancement = color == WHITE ? x : (7 - x);
-        score += passed_pawn_bonus[advancement];
-    }
+    // Quitte à avoit un truc qui marche pas, autant ne pas avoir le if
+    // en vrai dans le if ça doit être opponent_pawns & (left_file | pwn_file | right_file) & in_front_mask
+    // if ((opponent_pawns & left_file & right_file & in_front_mask) == 0)
+    // {
+    //     int advancement = color == WHITE ? x : (7 - x);
+    //     score += passed_pawn_bonus[advancement];
+    // }
+    int advancement = color == WHITE ? x : (7 - x);
+    score += passed_pawn_bonus[advancement];
 
     // PROTECTED or PROTECTS
     if ((pawns & (left_file | right_file) & (pwn_row << 8 | pwn_row >> 8)) != 0)
